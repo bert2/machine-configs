@@ -28,7 +28,7 @@ Function Con { ping.exe -t web.de }
 
 Function MkLink { cmd.exe /c mklink $args }
 
-Function CL($Path) { Set-Location $Path; Get-ChildItem . }
+Function cl($Path) { Set-Location $Path; Get-ChildItem . }
 
 Function FullScreen { Set-PowerShellSize ((Get-DisplaySize).Width - 3) ((Get-DisplaySize).Height - 1) }
 
@@ -42,7 +42,7 @@ Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty M
 
 Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
 
-Function Search([Parameter(Mandatory = $true)][String]$Pattern, [int]$Context = 0) { 
+Function Search($Pattern, $Context = 0) { 
 	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize
 }
 
@@ -84,13 +84,13 @@ Filter Colorize {
 	}
 }
 
-Function New-Credential([string] $UserName, [string] $Password) {
+Function New-Credential($UserName, $Password) {
 	New-Object `
 		-TypeName System.Management.Automation.PSCredential `
 		-ArgumentList $UserName, (ConvertTo-SecureString $Password -AsPlainText -Force)
 }
 
-Function Add-PathToEnvironment([Parameter(Mandatory=$true)][String] $Path, [switch] $Temp, [switch] $Force) {
+Function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	if (-not $Temp) {
 		if (-not (Test-Path $Path) -and -not $Force) {
 			Write-Warning "Use -Force switch to permanently add non-existing directory $Path to PATH environment variable."
@@ -104,7 +104,7 @@ Function Add-PathToEnvironment([Parameter(Mandatory=$true)][String] $Path, [swit
 	$env:Path += ";$Path"
 }
 
-Function Set-PowerShellSize([Parameter(Mandatory = $true)][int] $Width, [Parameter(Mandatory = $true)][int] $Height) {
+Function Set-PowerShellSize($Width, $Height) {
 	Write-Host "New size: $Width x $Height"
 	$bufferSize = (Get-PSWindow).BufferSize
 
@@ -117,14 +117,14 @@ Function Set-PowerShellSize([Parameter(Mandatory = $true)][int] $Width, [Paramet
 	}
 }
 
-Function Set-BufferSize([Parameter(Mandatory = $true)][int] $Width, [Parameter(Mandatory = $true)][int] $Height) {
+Function Set-BufferSize($Width, $Height) {
 	$newSize = (Get-PSWindow).BufferSize
 	$newSize.Width = $Width
 	$newSize.Height = $Height
 	(Get-PSWindow).BufferSize = $newSize
 }
 
-Function Set-WindowSize([Parameter(Mandatory = $true)][int] $Width, [Parameter(Mandatory = $true)][int] $Height) {
+Function Set-WindowSize($Width, $Height) {
 	$maxHeight = (Get-PSWindow).MaxWindowSize.Height
 	$newSize = (Get-PSWindow).WindowSize
 	$newSize.Width = $Width

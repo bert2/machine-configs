@@ -114,7 +114,7 @@ Function Set-Screen([switch]$Full, [switch]$Half, [switch]$Quarter) {
 		If ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
 		If ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
 		
-		"Current size: " + (Get-PSWindow).WindowSize
+		Write-Host "Current size: $((Get-PSWindow).WindowSize)"
 	}
 
 	Function Set-PowerShellSize($Width, $Height) {

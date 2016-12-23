@@ -28,15 +28,7 @@ Function Con { ping.exe -t web.de }
 
 Function MkLink { cmd.exe /c mklink $args }
 
-Function cl($Path) { Set-Location $Path; Get-ChildItem . }
-
-Function FullScreen { Set-PowerShellSize ((Get-DisplaySize).Width - 3) ((Get-DisplaySize).Height - 1) }
-
-Function HalfScreen { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
-
-Function QuarterScreen { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
-
-Function HardClean { Get-ChildItem -Recurse -Directory -Include bin,obj | %{ Remove-Item -Recurse -Force $_.FullName } }
+Function cl($Path) { Set-Location $Path; Get-ChildItem $Path }
 
 Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum }
 
@@ -44,6 +36,10 @@ Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty M
 
 Function Search($Pattern, $Context = 0) { 
 	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize
+}
+
+Function HardClean { 
+	Get-ChildItem -Recurse -Directory -Include bin,obj | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
 Function Prompt {
@@ -104,41 +100,60 @@ Function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	$env:Path += ";$Path"
 }
 
-Function Set-PowerShellSize($Width, $Height) {
-	Write-Host "New size: $Width x $Height"
-	$bufferSize = (Get-PSWindow).BufferSize
-
-	If ($bufferSize.Width -lt $Width) {
-		Set-BufferSize $Width 9999
-		Set-WindowSize $Width $Height
-	} Else {
-		Set-WindowSize $Width $Height
-		Set-BufferSize $Width 9999
+Function ss($Size) {
+	Switch ($Size) {
+		1 { Set-Screen -Full }
+		2 { Set-Screen -Half }
+		4 { Set-Screen -Quarter }
 	}
 }
 
-Function Set-BufferSize($Width, $Height) {
-	$newSize = (Get-PSWindow).BufferSize
-	$newSize.Width = $Width
-	$newSize.Height = $Height
-	(Get-PSWindow).BufferSize = $newSize
-}
+Function Set-Screen([switch]$Full, [switch]$Half, [switch]$Quarter) {
+	Function Main {	
+		If ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 3) ((Get-DisplaySize).Height - 1) }
+		If ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
+		If ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
+		
+		"Current size: " + (Get-PSWindow).WindowSize
+	}
 
-Function Set-WindowSize($Width, $Height) {
-	$maxHeight = (Get-PSWindow).MaxWindowSize.Height
-	$newSize = (Get-PSWindow).WindowSize
-	$newSize.Width = $Width
-	$newSize.Height = (Min $Height $maxHeight)
-	(Get-PSWindow).WindowSize = $newSize
-}
+	Function Set-PowerShellSize($Width, $Height) {
+		$bufferSize = (Get-PSWindow).BufferSize
 
-Function Get-PSWindow { (Get-Host).UI.RawUI }
+		If ($bufferSize.Width -lt $Width) {
+			Set-BufferSize $Width 9999
+			Set-WindowSize $Width $Height
+		} Else {
+			Set-WindowSize $Width $Height
+			Set-BufferSize $Width 9999
+		}
+	}
+	
+	Function Set-BufferSize($Width, $Height) {
+		$newSize = (Get-PSWindow).BufferSize
+		$newSize.Width = $Width
+		$newSize.Height = $Height
+		(Get-PSWindow).BufferSize = $newSize
+	}
 
-Function Get-DisplaySize {
-	$oldBufferSize = (Get-PSWindow).BufferSize
-	# Window size is restricted by the current buffer size. Increase buffer before querying the maximum window size.
-	Set-BufferSize 500 500
-	$maxSize = (Get-PSWindow).MaxWindowSize 
-	Set-BufferSize $oldBufferSize.Width $oldBufferSize.Height
-	$maxSize
+	Function Set-WindowSize($Width, $Height) {
+		$maxHeight = (Get-PSWindow).MaxWindowSize.Height
+		$newSize = (Get-PSWindow).WindowSize
+		$newSize.Width = $Width
+		$newSize.Height = (Min $Height $maxHeight)
+		(Get-PSWindow).WindowSize = $newSize
+	}
+	
+	Function Get-DisplaySize {
+		$oldBufferSize = (Get-PSWindow).BufferSize
+		# Window size is restricted by the current buffer size. Increase buffer before querying the maximum window size.
+		Set-BufferSize 500 500
+		$maxSize = (Get-PSWindow).MaxWindowSize 
+		Set-BufferSize $oldBufferSize.Width $oldBufferSize.Height
+		$maxSize
+	}
+	
+	Function Get-PSWindow { (Get-Host).UI.RawUI }
+	
+	Main
 }

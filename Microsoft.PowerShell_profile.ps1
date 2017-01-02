@@ -16,6 +16,7 @@ If (Test-Path ~\LocalPSProfile.ps1) {
 }
 
 Set-Alias :? Get-Help
+Set-Alias ?? If-Null
 Set-Alias Col Colorize
 Set-Alias Tree Print-DirectoryTree
 
@@ -92,18 +93,21 @@ test
  |	 +- file
  +-	file
 #>
-Function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $PathDepth = 0) {
+Function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
 	$indent = "   "
-	Write-Host -NoNewLine ($indent * $PathDepth)
+	Write-Host -NoNewLine ($indent * $Depth)
 	Write-Host ($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))
 
+	If ($Depth -gt $Limit) {
+		Return
+	}
+	
 	Get-ChildItem $Dir.FullName `
 	| ForEach-Object { 
 		If ($_ -is [IO.DirectoryInfo]) { 
-			Print-DirectoryTree $_ ($PathDepth + 1)
-			Write-Host
+			Print-DirectoryTree $_ $Limit ($Depth + 1)
 		} Else {
-			Write-Host -NoNewLine ($indent * ($PathDepth + 1))			
+			Write-Host -NoNewLine ($indent * ($Depth + 1))			
 			Write-Host $_.Name
 		}
 	}
@@ -192,4 +196,8 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 	Function Get-PSWindow { (Get-Host).UI.RawUI }
 	
 	Main
+}
+
+Filter If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
+	If ($value) {$value} Else {$default}
 }

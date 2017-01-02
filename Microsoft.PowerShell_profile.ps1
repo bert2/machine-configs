@@ -146,7 +146,7 @@ Function ss($Size) {
 
 Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 	Function Main {	
-		If ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 3) ((Get-DisplaySize).Height - 1) }
+		If ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 5) ((Get-DisplaySize).Height - 1) }
 		If ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
 		If ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
 		

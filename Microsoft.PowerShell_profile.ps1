@@ -11,16 +11,13 @@ If (Get-Module PSReadline) {
 }
 
 If (Test-Path ~\LocalPSProfile.ps1) {
-	. ~\LocalPSProfile.ps1
-	
-	Set-Alias Bash $LocalBashPath
-	Set-Alias NPP $LocalNppPath
-	
+	. ~\LocalPSProfile.ps1	
 	Write-Host "Local PS profile loaded."
 }
 
 Set-Alias :? Get-Help
 Set-Alias Col Colorize
+Set-Alias Tree Print-DirectoryTree
 
 Function Desktop { Set-Location ~\Desktop }
 
@@ -86,6 +83,45 @@ Function New-Credential($UserName, $Password) {
 		-ArgumentList $UserName, (ConvertTo-SecureString $Password -AsPlainText -Force)
 }
 
+<#
+test
+ |- sub
+ |   |- file
+ |	 +- file
+ |-	sub
+ |	 +- file
+ +-	file
+#>
+Function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $PathDepth = 0) {
+	$indent = "   "
+	Write-Host -NoNewLine ($indent * $PathDepth)
+	Write-Host ($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))
+
+	Get-ChildItem $Dir.FullName `
+	| ForEach-Object { 
+		If ($_ -is [IO.DirectoryInfo]) { 
+			Print-DirectoryTree $_ ($PathDepth + 1)
+			Write-Host
+		} Else {
+			Write-Host -NoNewLine ($indent * ($PathDepth + 1))			
+			Write-Host $_.Name
+		}
+	}
+}
+
+Filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $SuppressAssemblyLoadErrors) {
+	$path = $File.File | ?? $File.Path | ?? $File.FullName | ?? $File.FullPath | ?? $File
+	$absolutePath = Resolve-Path $path
+	
+	Try {
+		[System.Reflection.AssemblyName]::GetAssemblyName($absolutePath)
+	} Catch [BadImageFormatException] {
+		If (-not $SuppressAssemblyLoadErrors) {
+			throw
+		}
+	}
+}
+
 Function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	if (-not $Temp) {
 		if (-not (Test-Path $Path) -and -not $Force) {
@@ -108,7 +144,7 @@ Function ss($Size) {
 	}
 }
 
-Function Set-Screen([switch]$Full, [switch]$Half, [switch]$Quarter) {
+Function Set-Screen([switch] $Full, [switch $Half, [switch] $Quarter) {
 	Function Main {	
 		If ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 3) ((Get-DisplaySize).Height - 1) }
 		If ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }

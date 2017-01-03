@@ -33,7 +33,7 @@ Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty M
 Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
 
 Function Search($Pattern, $Context = 0) { 
-	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize
+	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize-MatchInfo
 }
 
 Function HardClean { 
@@ -46,7 +46,7 @@ Function Prompt {
     " "
 }
 
-Filter Colorize-Item([Parameter(ValueFromPipeline = $true)] $Item) {
+Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
 	If (Test-Path $Item.Path) {
 		Write-Host -NoNewLine -ForegroundColor Magenta ($Item.Path | Resolve-Path -Relative)
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"

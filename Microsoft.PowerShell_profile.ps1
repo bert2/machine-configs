@@ -17,7 +17,7 @@ If (Test-Path ~\LocalPSProfile.ps1) {
 
 Set-Alias :? Get-Help
 Set-Alias ?? If-Null
-Set-Alias Col Colorize-Item
+Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 
 Function Desktop { Set-Location ~\Desktop }

@@ -46,25 +46,25 @@ Function Prompt {
     " "
 }
 
-Filter Colorize {
-	if (Test-Path $_.Path) {
-		Write-Host -NoNewLine -ForegroundColor Magenta ($_.Path | Resolve-Path -Relative)
+Filter Colorize([Parameter(ValueFromPipeline = $true)] $Item) {
+	If (Test-Path $Item.Path) {
+		Write-Host -NoNewLine -ForegroundColor Magenta ($Item.Path | Resolve-Path -Relative)
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	}
 	
-	Write-Host -NoNewLine -ForegroundColor Green $_.LineNumber
+	Write-Host -NoNewLine -ForegroundColor Green $Item.LineNumber
 	Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	
-	if ($_.Context -ne $null) {
+	If ($Item.Context -ne $null) {
 		Write-Host
 	}
 	
-	if ($_.Context.PreContext -ne $null) {
-		Write-Host -ForegroundColor DarkGray ($_.Context.PreContext -join "`n")
+	If ($Item.Context.PreContext -ne $null) {
+		Write-Host -ForegroundColor DarkGray ($Item.Context.PreContext -join "`n")
 	}
 	
-	$matchLine = $_.Line;
-	foreach ($match in $_.Matches) {
+	$matchLine = $Item.Line;
+	ForEach ($match in $Item.Matches) {
 		$lineParts = $matchLine -Split $match,2
 		Write-Host -NoNewLine $lineParts[0]
 		Write-Host -NoNewLine -ForegroundColor Red $match
@@ -73,8 +73,8 @@ Filter Colorize {
 	
 	Write-Host $matchLine
 	
-	if ($_.Context.PostContext -ne $null) {
-		Write-Host -ForegroundColor DarkGray ($_.Context.PostContext -join "`n")
+	If ($Item.Context.PostContext -ne $null) {
+		Write-Host -ForegroundColor DarkGray ($Item.Context.PostContext -join "`n")
 	}
 }
 

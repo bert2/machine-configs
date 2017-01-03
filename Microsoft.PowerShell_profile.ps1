@@ -26,7 +26,7 @@ Function Con { ping.exe -t web.de }
 
 Function MkLink { cmd.exe /c mklink $args }
 
-Function cl($Path) { Set-Location $Path; Get-ChildItem $Path }
+Function cl($Path) { Get-ChildItem $Path; Set-Location $Path }
 
 Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum }
 

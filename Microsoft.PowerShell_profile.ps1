@@ -17,7 +17,7 @@ If (Test-Path ~\LocalPSProfile.ps1) {
 
 Set-Alias :? Get-Help
 Set-Alias ?? If-Null
-Set-Alias Col Colorize
+Set-Alias Col Colorize-Item
 Set-Alias Tree Print-DirectoryTree
 
 Function Desktop { Set-Location ~\Desktop }
@@ -46,7 +46,7 @@ Function Prompt {
     " "
 }
 
-Filter Colorize([Parameter(ValueFromPipeline = $true)] $Item) {
+Filter Colorize-Item([Parameter(ValueFromPipeline = $true)] $Item) {
 	If (Test-Path $Item.Path) {
 		Write-Host -NoNewLine -ForegroundColor Magenta ($Item.Path | Resolve-Path -Relative)
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"

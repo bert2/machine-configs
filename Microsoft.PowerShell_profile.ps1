@@ -32,6 +32,8 @@ Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty M
 
 Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
 
+Function Expl($Path) { explorer.exe ($Path | ?? .) }
+
 Function Search($Pattern, $Context = 0) { 
 	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize-MatchInfo
 }

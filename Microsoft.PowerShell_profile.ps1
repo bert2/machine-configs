@@ -207,24 +207,13 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 	Main
 }
 
-Filter If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
-	If ($value) {$value} Else {$default}
-}
-
-# Replacemnet for "select -f 1" which cannot return $null, but only a zero-sized array.
-# Although zero-sized arrays are "unboxed" to $null they cannot be used as input to pipeline functions.
-Function Get-First([Parameter(ValueFromPipeline = $true)]$item) {
-	Begin {
-		$first = $null
-		$done = $false
-	}
-	
-	Process {
-		If (-not $done) {
-			$first = $item
-			$done = $true
+	Function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
+		Process { 
+			$processedSomething = $true
+			If ($value) { $value } Else { $default } 
 		}
+		
+		# This makes sure the $default is returned even when the input was an empty array or of type
+		# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
+		End { If (-not $processedSomething) { $default }}
 	}
-	
-	End { $first }
-}

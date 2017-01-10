@@ -215,5 +215,5 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 		
 		# This makes sure the $default is returned even when the input was an empty array or of type
 		# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
-		End { If (-not $processedSomething) { $default }}
+		End { If (-not $processedSomething) { $default } }
 	}

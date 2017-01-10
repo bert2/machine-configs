@@ -34,6 +34,13 @@ Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty M
 
 Function Expl($Path) { explorer.exe ($Path | ?? .) }
 
+Function SvnAddAll { 
+	svn.exe status `
+	| ?{ $_ -match "^\?" } `
+	| %{ $_ -replace "^\?\s+", ""} `
+	| %{ svn.exe add $_ }
+}
+
 Function Search($Pattern, $Context = 0) { 
 	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize-MatchInfo
 }
@@ -202,4 +209,22 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 
 Filter If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
 	If ($value) {$value} Else {$default}
+}
+
+# Replacemnet for "select -f 1" which cannot return $null, but only a zero-sized array.
+# Although zero-sized arrays are "unboxed" to $null they cannot be used as input to pipeline functions.
+Function Get-First([Parameter(ValueFromPipeline = $true)]$item) {
+	Begin {
+		$first = $null
+		$done = $false
+	}
+	
+	Process {
+		If (-not $done) {
+			$first = $item
+			$done = $true
+		}
+	}
+	
+	End { $first }
 }

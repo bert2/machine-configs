@@ -34,6 +34,8 @@ Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty M
 
 Function Expl($Path) { explorer.exe ($Path | ?? .) }
 
+Function Profile { $profile | Split-Path -Parent | Set-Location }
+
 Function SvnAddAll { 
 	svn.exe status `
 	| ?{ $_ -match "^\?" } `

@@ -48,7 +48,7 @@ Function Search($Pattern, $Context = 0) {
 }
 
 Function HardClean { 
-	Get-ChildItem -Recurse -Directory -Include bin,obj | %{ Remove-Item -Recurse -Force $_.FullName } 
+	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
 Function Prompt {
@@ -209,13 +209,13 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 	Main
 }
 
-	Function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
-		Process { 
-			$processedSomething = $true
-			If ($value) { $value } Else { $default } 
-		}
-		
-		# This makes sure the $default is returned even when the input was an empty array or of type
-		# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
-		End { If (-not $processedSomething) { $default } }
+Function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
+	Process { 
+		$processedSomething = $true
+		If ($value) { $value } Else { $default } 
 	}
+	
+	# This makes sure the $default is returned even when the input was an empty array or of type
+	# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
+	End { If (-not $processedSomething) { $default } }
+}

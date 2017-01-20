@@ -210,6 +210,8 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 }
 
 Function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
+	Begin { $processedSomething = $false }
+
 	Process { 
 		$processedSomething = $true
 		If ($value) { $value } Else { $default } 

@@ -15,6 +15,7 @@ If (Test-Path ~\LocalPSProfile.ps1) {
 	Write-Host "Local PS profile loaded."
 }
 
+Set-Alias Open Invoke-Item
 Set-Alias :? Get-Help
 Set-Alias ?? If-Null
 Set-Alias Col Colorize-MatchInfo

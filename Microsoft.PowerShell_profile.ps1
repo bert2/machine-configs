@@ -37,15 +37,17 @@ Function Expl($Path) { explorer.exe ($Path | ?? .) }
 
 Function Profile { $profile | Split-Path -Parent | Set-Location }
 
-Function SvnAddAll { 
+Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
 	svn.exe status `
-	| ?{ $_ -match "^\?" } `
-	| %{ $_ -replace "^\?\s+", ""} `
-	| %{ svn.exe add $_ }
+	| ?{ $_ -match "^$Status" } `
+	| %{ $_ -replace "^$Status\s+", ''} `
+	| %{ & svn.exe $Command $_ }
 }
 
-Function Search($Pattern, $Context = 0) { 
-	Get-ChildItem -Recurse | Select-String -Context $Context -AllMatches $Pattern | Colorize-MatchInfo
+Function Search($Pattern, $Context = 0, $Include = @(), $Exclude = @('*.exe', '*.dll', '*.pdb')) { 
+	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
+	| Select-String -Context $Context -AllMatches $Pattern `
+	| Colorize-MatchInfo
 }
 
 Function HardClean { 
@@ -108,7 +110,7 @@ test
 Function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
 	$indent = "   "
 	Write-Host -NoNewLine ($indent * $Depth)
-	Write-Host ($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))
+	Write-Host "$($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))\"
 
 	If ($Depth -gt $Limit) {
 		Return

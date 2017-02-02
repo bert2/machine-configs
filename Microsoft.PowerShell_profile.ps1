@@ -60,12 +60,13 @@ Function HardClean {
 
 Function Prompt {
 	$gitBranch = git.exe branch 2>&1 | ?{ $_ -match '^\* (.*)' } | %{ $Matches[1] }
-	$svnLocalRev = svn.exe info 2>&1 | ?{ $_ -like 'Last Changed Rev: *' }
-	$svnHeadRev = if ($svnLocalRev) { svn.exe info -r HEAD 2>&1 | ?{ $_ -like 'Last Changed Rev: *' } }
+	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
+	$isSvnDir = -not $svnLocalRev -like '*is not a working copy'
+	$svnHeadRev = if ($isSvnDir) { svn.exe info -r HEAD --show-item last-changed-revision 2>&1 }
     
 	Write-Host -NoNewline -ForegroundColor Cyan "$(Get-Location)"
 	if ($gitBranch)	{ Write-Host -NoNewline -ForegroundColor Magenta " ($gitBranch)" }
-	if ($svnLocalRev) {
+	if ($isSvnDir) {
 		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
 		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
 	}

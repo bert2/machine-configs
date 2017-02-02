@@ -54,7 +54,11 @@ Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 
 Function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
 
-Function Search($Pattern, $Context = 0, $Include = @(), $Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache')) { 
+Function Search(
+	$Pattern, 
+	$Context = 0, 
+	$Include = @(), 
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache')) { 
 	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
 	| Select-String -Context $Context -AllMatches $Pattern `
 	| Colorize-MatchInfo
@@ -65,14 +69,16 @@ Function HardClean {
 }
 
 Function Prompt {
-	$gitBranch = git.exe branch 2>&1 | ?{ $_ -match '^\* (.*)' } | %{ $Matches[1] }
+	$gitBranch = git.exe rev-parse --abbrev-ref HEAD 2>&1
+	$isGitDir = -not ($gitBranch -like '*Not a git repository*')
+	
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	$isSvnDir = -not ($svnLocalRev -like '*is not a working copy')
-	$svnHeadRev = if ($isSvnDir) { svn.exe info -r HEAD --show-item last-changed-revision 2>&1 }
     
 	Write-Host -NoNewline -ForegroundColor Cyan "$(Get-Location)"
-	if ($gitBranch)	{ Write-Host -NoNewline -ForegroundColor Magenta " ($gitBranch)" }
+	if ($isGitDir) { Write-Host -NoNewline -ForegroundColor Magenta " ($gitBranch)" }
 	if ($isSvnDir) {
+		$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
 		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
 		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
 	}

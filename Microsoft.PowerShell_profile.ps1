@@ -4,19 +4,21 @@ If (Test-Path $ChocolateyProfile) {
 	Import-Module "$ChocolateyProfile"
 }
 
-If (Get-Module PSReadline) {
+If (Get-Module -ListAvailable -Name PSReadline) {
+	Write-Host 'Loading module PSReadLine.'
 	Import-Module PSReadline
 	Set-PSReadlineKeyHandler -Key Tab -Function Complete
 	Set-PSReadlineOption -BellStyle None
 }
 
-If (Get-Module posh-git) {
+If (Get-Module -ListAvailable -Name posh-git) {
+	Write-Host 'Loading module posh-git.'
 	Import-Module posh-git
 }
 
 If (Test-Path ~\LocalPSProfile.ps1) {
+	Write-Host "Loading local PowerShell profile."
 	. ~\LocalPSProfile.ps1	
-	Write-Host "Local PS profile loaded."
 }
 
 Set-Alias Open Invoke-Item

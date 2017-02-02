@@ -35,6 +35,8 @@ Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty M
 
 Function Expl($Path) { explorer.exe ($Path | ?? .) }
 
+Function Explr($Path) { Expl $Path }
+
 Function Profile { $profile | Split-Path -Parent | Set-Location }
 
 Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
@@ -44,7 +46,9 @@ Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 	| %{ & svn.exe $Command $_ }
 }
 
-Function Search($Pattern, $Context = 0, $Include = @(), $Exclude = @('*.exe', '*.dll', '*.pdb')) { 
+Function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
+
+Function Search($Pattern, $Context = 0, $Include = @(), $Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache')) { 
 	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
 	| Select-String -Context $Context -AllMatches $Pattern `
 	| Colorize-MatchInfo
@@ -55,9 +59,19 @@ Function HardClean {
 }
 
 Function Prompt {
-    $prompt = "PS " + $(Split-Path $(Get-Location) -Leaf) + ">"
-    Write-Host $prompt -NoNewline -ForegroundColor Cyan
-    " "
+	$gitBranch = git.exe branch 2>&1 | ?{ $_ -match '^\* (.*)' } | %{ $Matches[1] }
+	$svnLocalRev = svn.exe info 2>&1 | ?{ $_ -like 'Last Changed Rev: *' }
+	$svnHeadRev = if ($svnLocalRev) { svn.exe info -r HEAD 2>&1 | ?{ $_ -like 'Last Changed Rev: *' } }
+    
+	Write-Host -NoNewline -ForegroundColor Cyan "$(Get-Location)"
+	if ($gitBranch)	{ Write-Host -NoNewline -ForegroundColor Magenta " ($gitBranch)" }
+	if ($svnLocalRev) {
+		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
+		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
+	}
+	Write-Host
+	Write-Host -NoNewline -ForegroundColor Cyan '>'
+	Write-Output ' '
 }
 
 Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
@@ -79,7 +93,7 @@ Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 	
 	$matchLine = $Item.Line;
 	ForEach ($match in $Item.Matches) {
-		$lineParts = $matchLine -Split $match,2
+		$lineParts = $matchLine -Split $match,2,'SimpleMatch,IgnoreCase'
 		Write-Host -NoNewLine $lineParts[0]
 		Write-Host -NoNewLine -ForegroundColor Red $match
 		$matchLine = $lineParts[1]

@@ -10,6 +10,10 @@ If (Get-Module PSReadline) {
 	Set-PSReadlineOption -BellStyle None
 }
 
+If (Get-Module posh-git) {
+	Import-Module posh-git
+}
+
 If (Test-Path ~\LocalPSProfile.ps1) {
 	. ~\LocalPSProfile.ps1	
 	Write-Host "Local PS profile loaded."

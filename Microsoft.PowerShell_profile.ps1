@@ -1,22 +1,22 @@
 # Chocolatey profile
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
-If (Test-Path $ChocolateyProfile) {
+if (Test-Path $ChocolateyProfile) {
 	Import-Module "$ChocolateyProfile"
 }
 
-If (Get-Module -ListAvailable -Name PSReadline) {
+if (Get-Module -ListAvailable -Name PSReadline) {
 	Write-Host 'Loading module PSReadLine.'
 	Import-Module PSReadline
 	Set-PSReadlineKeyHandler -Key Tab -Function Complete
 	Set-PSReadlineOption -BellStyle None
 }
 
-If (Get-Module -ListAvailable -Name posh-git) {
+if (Get-Module -ListAvailable -Name posh-git) {
 	Write-Host 'Loading module posh-git.'
 	Import-Module posh-git
 }
 
-If (Test-Path ~\LocalPSProfile.ps1) {
+if (Test-Path ~\LocalPSProfile.ps1) {
 	Write-Host "Loading local PowerShell profile."
 	. ~\LocalPSProfile.ps1	
 }
@@ -27,23 +27,23 @@ Set-Alias ?? If-Null
 Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 
-Function Desktop { Set-Location ~\Desktop }
+function Desktop { Set-Location ~\Desktop }
 
-Function Con { ping.exe -t web.de }
+function Con { ping.exe -t web.de }
 
-Function MkLink { cmd.exe /c mklink $args }
+function MkLink { cmd.exe /c mklink $args }
 
-Function cl($Path) { Get-ChildItem $Path; Set-Location $Path }
+function cl($Path) { Get-ChildItem $Path; Set-Location $Path }
 
-Function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum }
+function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty Maximum }
 
-Function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
+function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
 
-Function Expl($Path) { explorer.exe ($Path | ?? .) }
+function Expl($Path) { explorer.exe ($Path | ?? .) }
 
-Function Explr($Path) { Expl $Path }
+function Explr($Path) { Expl $Path }
 
-Function Profile { $profile | Split-Path -Parent | Set-Location }
+function Profile { $profile | Split-Path -Parent | Set-Location }
 
 function Prompt {
 	$originalLastExitCode = $LASTEXITCODE
@@ -57,9 +57,9 @@ function Prompt {
 	"$('>' * ($NestedPromptLevel + 1)) "
 }
 
-Function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
+function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
 
-Function Search(
+function Search(
 	$Pattern, 
 	$Context = 0, 
 	$Include = @(), 
@@ -69,11 +69,11 @@ Function Search(
 	| Colorize-MatchInfo
 }
 
-Function HardClean { 
+function HardClean { 
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
+function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
 	svn.exe status `
 	| ?{ $_ -match "^$Status" } `
 	| %{ $_ -replace "^$Status\s+", ''} `
@@ -90,8 +90,8 @@ function Write-SvnStatus {
 	}
 }
 
-Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
-	If (Test-Path $Item.Path) {
+filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
+	if (Test-Path $Item.Path) {
 		Write-Host -NoNewLine -ForegroundColor Magenta ($Item.Path | Resolve-Path -Relative)
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	}
@@ -99,16 +99,16 @@ Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 	Write-Host -NoNewLine -ForegroundColor Green $Item.LineNumber
 	Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	
-	If ($Item.Context -ne $null) {
+	if ($Item.Context -ne $null) {
 		Write-Host
 	}
 	
-	If ($Item.Context.PreContext -ne $null) {
+	if ($Item.Context.PreContext -ne $null) {
 		Write-Host -ForegroundColor DarkGray ($Item.Context.PreContext -join "`n")
 	}
 	
 	$matchLine = $Item.Line;
-	ForEach ($match in $Item.Matches) {
+	foreach ($match in $Item.Matches) {
 		$lineParts = $matchLine -Split $match,2,'SimpleMatch,IgnoreCase'
 		Write-Host -NoNewLine $lineParts[0]
 		Write-Host -NoNewLine -ForegroundColor Red $match
@@ -117,12 +117,12 @@ Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 	
 	Write-Host $matchLine
 	
-	If ($Item.Context.PostContext -ne $null) {
+	if ($Item.Context.PostContext -ne $null) {
 		Write-Host -ForegroundColor DarkGray ($Item.Context.PostContext -join "`n")
 	}
 }
 
-Function New-Credential($UserName, $Password) {
+function New-Credential($UserName, $Password) {
 	New-Object `
 		-TypeName System.Management.Automation.PSCredential `
 		-ArgumentList $UserName, (ConvertTo-SecureString $Password -AsPlainText -Force)
@@ -137,40 +137,40 @@ test
  |	 +- file
  +-	file
 #>
-Function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
+function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
 	$indent = "   "
 	Write-Host -NoNewLine ($indent * $Depth)
 	Write-Host "$($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))\"
 
-	If ($Depth -gt $Limit) {
-		Return
+	if ($Depth -gt $Limit) {
+		return
 	}
 	
 	Get-ChildItem $Dir.FullName `
 	| ForEach-Object { 
-		If ($_ -is [IO.DirectoryInfo]) { 
+		if ($_ -is [IO.DirectoryInfo]) { 
 			Print-DirectoryTree $_ $Limit ($Depth + 1)
-		} Else {
+		} else {
 			Write-Host -NoNewLine ($indent * ($Depth + 1))			
 			Write-Host $_.Name
 		}
 	}
 }
 
-Filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $SuppressAssemblyLoadErrors) {
+filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $SuppressAssemblyLoadErrors) {
 	$path = $File.File | ?? $File.Path | ?? $File.FullName | ?? $File.FullPath | ?? $File
 	$absolutePath = Resolve-Path $path
 	
-	Try {
+	try {
 		[System.Reflection.AssemblyName]::GetAssemblyName($absolutePath)
-	} Catch [BadImageFormatException] {
-		If (-not $SuppressAssemblyLoadErrors) {
+	} catch [BadImageFormatException] {
+		if (-not $SuppressAssemblyLoadErrors) {
 			throw
 		}
 	}
 }
 
-Function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
+function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	if (-not $Temp) {
 		if (-not (Test-Path $Path) -and -not $Force) {
 			Write-Warning "Use -Force switch to permanently add non-existing directory $Path to PATH environment variable."
@@ -184,43 +184,43 @@ Function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	$env:Path += ";$Path"
 }
 
-Function ss($Size) {
-	Switch ($Size) {
+function ss($Size) {
+	switch ($Size) {
 		1 { Set-Screen -Full }
 		2 { Set-Screen -Half }
 		4 { Set-Screen -Quarter }
 	}
 }
 
-Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
-	Function Main {	
-		If ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 5) ((Get-DisplaySize).Height - 1) }
-		If ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
-		If ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
+function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
+	function Main {	
+		if ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 5) ((Get-DisplaySize).Height - 1) }
+		if ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
+		if ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
 		
 		Write-Host "Current size: $((Get-PSWindow).WindowSize)"
 	}
 
-	Function Set-PowerShellSize($Width, $Height) {
+	function Set-PowerShellSize($Width, $Height) {
 		$bufferSize = (Get-PSWindow).BufferSize
 
-		If ($bufferSize.Width -lt $Width) {
+		if ($bufferSize.Width -lt $Width) {
 			Set-BufferSize $Width 9999
 			Set-WindowSize $Width $Height
-		} Else {
+		} else {
 			Set-WindowSize $Width $Height
 			Set-BufferSize $Width 9999
 		}
 	}
 	
-	Function Set-BufferSize($Width, $Height) {
+	function Set-BufferSize($Width, $Height) {
 		$newSize = (Get-PSWindow).BufferSize
 		$newSize.Width = $Width
 		$newSize.Height = $Height
 		(Get-PSWindow).BufferSize = $newSize
 	}
 
-	Function Set-WindowSize($Width, $Height) {
+	function Set-WindowSize($Width, $Height) {
 		$maxHeight = (Get-PSWindow).MaxWindowSize.Height
 		$newSize = (Get-PSWindow).WindowSize
 		$newSize.Width = $Width
@@ -228,7 +228,7 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 		(Get-PSWindow).WindowSize = $newSize
 	}
 	
-	Function Get-DisplaySize {
+	function Get-DisplaySize {
 		$oldBufferSize = (Get-PSWindow).BufferSize
 		# Window size is restricted by the current buffer size. Increase buffer before querying the maximum window size.
 		Set-BufferSize 500 500
@@ -237,20 +237,20 @@ Function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
 		$maxSize
 	}
 	
-	Function Get-PSWindow { (Get-Host).UI.RawUI }
+	function Get-PSWindow { (Get-Host).UI.RawUI }
 	
 	Main
 }
 
-Function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
+function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
 	Begin { $processedSomething = $false }
 
 	Process { 
 		$processedSomething = $true
-		If ($value) { $value } Else { $default } 
+		if ($value) { $value } else { $default } 
 	}
 	
 	# This makes sure the $default is returned even when the input was an empty array or of type
 	# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
-	End { If (-not $processedSomething) { $default } }
+	End { if (-not $processedSomething) { $default } }
 }

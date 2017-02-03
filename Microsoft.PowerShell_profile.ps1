@@ -69,22 +69,25 @@ Function HardClean {
 }
 
 Function Prompt {
-	$gitBranch = git.exe rev-parse --abbrev-ref HEAD 2>&1
-	$isGitDir = -not ($gitBranch -like '*Not a git repository*')
-	
-	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
-	$isSvnDir = -not ($svnLocalRev -like '*is not a working copy')
-    
-	Write-Host -NoNewline -ForegroundColor Cyan "$(Get-Location)"
-	if ($isGitDir) { Write-Host -NoNewline -ForegroundColor Magenta " ($gitBranch)" }
-	if ($isSvnDir) {
-		$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
-		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
-		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
+	Function Write-SvnStatus {
+		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
+		
+		if (-not ($svnLocalRev -like '*is not a working copy')) {
+			$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
+			if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
+			if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
+		}
 	}
+
+	$originalLastExitCode = $LASTEXITCODE
+    
+	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
+	Write-SvnStatus
+	Write-VcsStatus
 	Write-Host
-	Write-Host -NoNewline -ForegroundColor Cyan '>'
-	Write-Output ' '
+	
+	$LASTEXITCODE = $originalLastExitCode
+	"$('>' * ($NestedPromptLevel + 1)) "
 }
 
 Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {

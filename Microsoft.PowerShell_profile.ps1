@@ -48,7 +48,7 @@ function Profile { $profile | Split-Path -Parent | Set-Location }
 function Prompt {
 	$originalLastExitCode = $LASTEXITCODE
     
-	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
+	Write-Host -NoNewline -ForegroundColor Magenta $ExecutionContext.SessionState.Path.CurrentLocation
 	Write-SvnStatus
 	Write-VcsStatus
 	Write-Host
@@ -85,8 +85,8 @@ function Write-SvnStatus {
 	
 	if (-not ($svnLocalRev -like '*is not a working copy')) {
 		$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
-		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
-		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
+		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Cyan " [up to date]" }
+		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " [out of date]" }
 	}
 }
 
@@ -128,15 +128,6 @@ function New-Credential($UserName, $Password) {
 		-ArgumentList $UserName, (ConvertTo-SecureString $Password -AsPlainText -Force)
 }
 
-<#
-test
- |- sub
- |   |- file
- |	 +- file
- |-	sub
- |	 +- file
- +-	file
-#>
 function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
 	$indent = "   "
 	Write-Host -NoNewLine ($indent * $Depth)

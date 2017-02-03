@@ -45,11 +45,16 @@ Function Explr($Path) { Expl $Path }
 
 Function Profile { $profile | Split-Path -Parent | Set-Location }
 
-Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
-	svn.exe status `
-	| ?{ $_ -match "^$Status" } `
-	| %{ $_ -replace "^$Status\s+", ''} `
-	| %{ & svn.exe $Command $_ }
+function Prompt {
+	$originalLastExitCode = $LASTEXITCODE
+    
+	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
+	Write-SvnStatus
+	Write-VcsStatus
+	Write-Host
+	
+	$LASTEXITCODE = $originalLastExitCode
+	"$('>' * ($NestedPromptLevel + 1)) "
 }
 
 Function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
@@ -68,26 +73,21 @@ Function HardClean {
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-Function Prompt {
-	Function Write-SvnStatus {
-		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
-		
-		if (-not ($svnLocalRev -like '*is not a working copy')) {
-			$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
-			if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
-			if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
-		}
-	}
+Function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
+	svn.exe status `
+	| ?{ $_ -match "^$Status" } `
+	| %{ $_ -replace "^$Status\s+", ''} `
+	| %{ & svn.exe $Command $_ }
+}
 
-	$originalLastExitCode = $LASTEXITCODE
-    
-	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
-	Write-SvnStatus
-	Write-VcsStatus
-	Write-Host
+function Write-SvnStatus {
+	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
-	$LASTEXITCODE = $originalLastExitCode
-	"$('>' * ($NestedPromptLevel + 1)) "
+	if (-not ($svnLocalRev -like '*is not a working copy')) {
+		$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
+		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Green " (up to date)" }
+		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " (out of date)" }
+	}
 }
 
 Filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {

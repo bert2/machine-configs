@@ -83,11 +83,16 @@ function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 function Write-SvnStatus {
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
-	if (-not ($svnLocalRev -like '*is not a working copy')) {
-		$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
-		if ($svnLocalRev -eq $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Cyan " [up to date]" }
-		if ($svnLocalRev -ne $svnHeadRev) { Write-Host -NoNewline -ForegroundColor Red " [out of date]" }
+	if ($svnLocalRev -like '*is not a working copy') {
+		return
 	}
+	
+	$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
+	$svnStatus = if ($svnLocalRev -eq $svnHeadRev) {'up to date'} else {'out of date'}
+	
+	Write-Host -NoNewline -ForegroundColor Yellow ' ['
+	Write-Host -NoNewline -ForegroundColor Cyan $svnStatus		
+	Write-Host -NoNewline -ForegroundColor Yellow ']'
 }
 
 filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {

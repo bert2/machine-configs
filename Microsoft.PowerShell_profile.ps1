@@ -89,9 +89,10 @@ function Write-SvnStatus {
 	
 	$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
 	$svnStatus = if ($svnLocalRev -eq $svnHeadRev) {'up to date'} else {'out of date'}
+	$color = if ($svnLocalRev -eq $svnHeadRev) {'Cyan'} else {'Red'}
 	
 	Write-Host -NoNewline -ForegroundColor Yellow ' ['
-	Write-Host -NoNewline -ForegroundColor Cyan $svnStatus		
+	Write-Host -NoNewline -ForegroundColor $color $svnStatus		
 	Write-Host -NoNewline -ForegroundColor Yellow ']'
 }
 

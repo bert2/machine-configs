@@ -83,7 +83,14 @@ function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 function Write-SvnStatus {
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
-	if ($svnLocalRev -like '*is not a working copy') {
+	if ($svnLocalRev -like '*E155007*') {
+		return
+	}
+	
+	if ($svnLocalRev -like '*E200009*') {
+		Write-Host -NoNewline -ForegroundColor Yellow ' ['
+		Write-Host -NoNewline -BackgroundColor DarkRed 'Case mismatch'
+		Write-Host -NoNewline -ForegroundColor Yellow ']'
 		return
 	}
 	

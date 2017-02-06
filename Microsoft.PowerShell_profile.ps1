@@ -17,7 +17,7 @@ if (Get-Module -ListAvailable -Name posh-git) {
 }
 
 if (Test-Path ~\LocalPSProfile.ps1) {
-	Write-Host "Loading local PowerShell profile."
+	Write-Host 'Loading local PowerShell profile.'
 	. ~\LocalPSProfile.ps1	
 }
 
@@ -29,7 +29,7 @@ Set-Alias Tree Print-DirectoryTree
 
 function Desktop { Set-Location ~\Desktop }
 
-function Con { ping.exe -t web.de }
+function Con { ping.exe -t www.google.com }
 
 function MkLink { cmd.exe /c mklink $args }
 
@@ -83,10 +83,13 @@ function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 function Write-SvnStatus {
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
+	# Current directory is not part of an SVN working copy.
 	if ($svnLocalRev -like '*E155007*') {
 		return
 	}
 	
+	# Current directory is part of an SVN working copy, but SVN can still not find it.
+	# Probably a letter case issue, since the case of the paths passed filesystem cmdlets (e.g. CD) is preserved.
 	if ($svnLocalRev -like '*E200009*') {
 		Write-Host -NoNewline -ForegroundColor Yellow ' ['
 		Write-Host -NoNewline -BackgroundColor DarkRed 'Case mismatch'

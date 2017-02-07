@@ -198,13 +198,14 @@ filter Resolve-PathCase(
     
 	if (-not $parent) {
 		# Resolve-Path corrects case of filesystem roots (e.g. c:\ becomes C:\).
-		$Path.Name
+		Resolve-Path $Path.Name
         return
     }
 
 	$parent `
 	| Resolve-PathCase `
-	| Join-Path -ChildPath $parent.GetDirectories($Path.Name).Name
+	| Join-Path -ChildPath $parent.GetDirectories($Path.Name).Name `
+    | Resolve-Path
 }
 
 function ss($Size) {

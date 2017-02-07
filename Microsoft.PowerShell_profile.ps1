@@ -192,8 +192,9 @@ function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 }
 
 filter Resolve-PathCase(
-	[Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][IO.DirectoryInfo] $Path) {
+	[Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)] $Path) {
 	
+	$Path = if ($Path -is [IO.DirectoryInfo]) {$Path} else {Get-Item $Path}
     $parent = $Path.Parent
     
 	if (-not $parent) {

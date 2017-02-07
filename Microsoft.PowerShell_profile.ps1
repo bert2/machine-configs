@@ -89,12 +89,11 @@ function Write-SvnStatus {
 	}
 	
 	# Current directory is part of an SVN working copy, but SVN can still not find it.
-	# Probably a letter case issue, since the case of the paths passed filesystem cmdlets (e.g. CD) is preserved.
+	# Probably a letter case issue, since the case of the paths passed to filesystem cmdlets (e.g. CD) is preserved.
 	if ($svnLocalRev -like '*E200009*') {
-		Write-Host -NoNewline -ForegroundColor Yellow ' ['
-		Write-Host -NoNewline -BackgroundColor DarkRed 'Case mismatch'
-		Write-Host -NoNewline -ForegroundColor Yellow ']'
-		return
+		# Fix case of current working directory and try svn info again.
+		Get-Location | Resolve-PathCase | Set-Location
+		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	}
 	
 	$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1

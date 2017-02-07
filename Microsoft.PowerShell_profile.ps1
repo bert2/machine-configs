@@ -191,6 +191,22 @@ function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	$env:Path += ";$Path"
 }
 
+filter Resolve-PathCase(
+	[Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)][IO.DirectoryInfo] $Path) {
+	
+    $parent = $Path.Parent
+    
+	if (-not $parent) {
+		# Resolve-Path corrects case of filesystem roots (e.g. c:\ becomes C:\).
+		$Path.Name
+        return
+    }
+
+	$parent `
+	| Resolve-PathCase `
+	| Join-Path -ChildPath $parent.GetDirectories($Path.Name).Name
+}
+
 function ss($Size) {
 	switch ($Size) {
 		1 { Set-Screen -Full }

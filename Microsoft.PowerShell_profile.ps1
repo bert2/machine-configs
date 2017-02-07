@@ -48,7 +48,7 @@ function Profile { $profile | Split-Path -Parent | Set-Location }
 function Prompt {
 	$originalLastExitCode = $LASTEXITCODE
     
-	Write-Host -NoNewline -ForegroundColor Magenta $ExecutionContext.SessionState.Path.CurrentLocation
+	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
 	if (Get-Command svn -ErrorAction Ignore) { Write-SvnStatus }
 	if (Get-Command git -ErrorAction Ignore) { Write-VcsStatus }
 	Write-Host

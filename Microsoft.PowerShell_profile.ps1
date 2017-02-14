@@ -29,8 +29,6 @@ Set-Alias Tree Print-DirectoryTree
 
 function Desktop { Set-Location ~\Desktop }
 
-function Con { ping.exe -t www.google.com }
-
 function MkLink { cmd.exe /c mklink $args }
 
 function cl($Path) { Get-ChildItem $Path; Set-Location $Path }

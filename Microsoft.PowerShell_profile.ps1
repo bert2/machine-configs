@@ -71,10 +71,16 @@ function HardClean {
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command) { 
+function SvnForAll([ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $Command) {
+	$statusPattern = switch ($Status) {
+			'?' {'\?'}
+			'*' {'.'}
+			default {$Status}
+		}
+	
 	svn.exe status `
-	| ?{ $_ -match "^$Status" } `
-	| %{ $_ -replace "^$Status\s+", ''} `
+	| ?{ $_ -match "^$statusPattern" } `
+	| %{ $_ -replace "^$statusPattern\s+", ''} `
 	| %{ & svn.exe $Command $_ }
 }
 

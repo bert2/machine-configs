@@ -79,6 +79,12 @@ function SvnForAll([ValidateSet('\?', 'A', 'M', 'D', 'R', '.')]$Status, $Command
 }
 
 function Write-SvnStatus {
+	function Write-Status($status, $color) {
+		Write-Host -NoNewline -ForegroundColor Yellow ' ['
+		Write-Host -NoNewline -ForegroundColor $color $status		
+		Write-Host -NoNewline -ForegroundColor Yellow ']'
+	}
+
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
 	# Current directory is not part of an SVN working copy.
@@ -94,13 +100,22 @@ function Write-SvnStatus {
 		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	}
 	
+	if ($svnLocalRev -match '^svn: E\d+') {
+		Write-Status $svnLocalRev Red
+		return
+	}
+	
 	$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
+	
+	if ($svnHeadRev -match '^svn: E\d+') {
+		Write-Status $svnHeadRev Red
+		return
+	}
+	
 	$svnStatus = if ($svnLocalRev -eq $svnHeadRev) {'up to date'} else {'out of date'}
 	$color = if ($svnLocalRev -eq $svnHeadRev) {'Cyan'} else {'Red'}
 	
-	Write-Host -NoNewline -ForegroundColor Yellow ' ['
-	Write-Host -NoNewline -ForegroundColor $color $svnStatus		
-	Write-Host -NoNewline -ForegroundColor Yellow ']'
+	Write-Status $svnStatus $color
 }
 
 filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {

@@ -58,7 +58,7 @@ function Prompt {
 function Locate($Filter) { 
 	Get-ChildItem -Recurse -Filter $Filter `
 	| ForEach-Object {
-		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.Directory | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name
 	}
 }
@@ -77,17 +77,18 @@ function HardClean {
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-function SvnForAll([ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $Command) {
+function SvnForAll([ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $SvnCommand, $ExternalCommand) {
 	$statusPattern = switch ($Status) {
 			'?' {'\?'}
 			'*' {'.'}
 			default {$Status}
 		}
+	$command = if ($SvnCommand) {"svn.exe $SvnCommand"} else {$ExternalCommand}
 	
 	svn.exe status `
 	| ?{ $_ -match "^$statusPattern" } `
-	| %{ $_ -replace "^$statusPattern\s+", ''} `
-	| %{ & svn.exe $Command $_ }
+	| %{ $_ -replace "^$statusPattern\s+", '' } `
+	| %{ & $command $_ }
 }
 
 function Write-SvnStatus {

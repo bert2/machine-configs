@@ -77,7 +77,7 @@ function HardClean {
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-function SvnForAll([ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $SvnCommand, $ExternalCommand) {
+function SvnForAll([Parameter(Mandatory=$true)][ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $SvnCommand, $ExternalCommand) {
 	$statusPattern = switch ($Status) {
 			'?' {'\?'}
 			'*' {'.'}
@@ -88,7 +88,7 @@ function SvnForAll([ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $SvnComma
 	svn.exe status `
 	| ?{ $_ -match "^$statusPattern" } `
 	| %{ $_ -replace "^$statusPattern\s+", '' } `
-	| %{ & $command $_ }
+	| %{ Invoke-Expression "$command '$_'" }
 }
 
 function Write-SvnStatus {

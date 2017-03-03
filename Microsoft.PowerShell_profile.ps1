@@ -55,7 +55,13 @@ function Prompt {
 	"$('>' * ($NestedPromptLevel + 1)) "
 }
 
-function Locate($Filter) { Get-ChildItem -Recurse -Filter $Filter }
+function Locate($Filter) { 
+	Get-ChildItem -Recurse -Filter $Filter `
+	| ForEach-Object {
+		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.Directory | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor Green  $_.Name
+	}
+}
 
 function Search(
 	$Pattern, 

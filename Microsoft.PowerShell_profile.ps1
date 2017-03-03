@@ -58,7 +58,7 @@ function Prompt {
 function Locate($Filter) { 
 	Get-ChildItem -Recurse -Filter $Filter `
 	| ForEach-Object {
-		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name
 	}
 }

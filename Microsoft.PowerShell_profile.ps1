@@ -125,10 +125,8 @@ function Write-SvnStatus {
 		return
 	}
 	
-	$svnStatus = if ($svnLocalRev -eq $svnHeadRev) {'up to date'} else {'out of date'}
 	$color = if ($svnLocalRev -eq $svnHeadRev) {'Cyan'} else {'Red'}
-	
-	Write-Status $svnStatus $color
+	Write-Status $svnLocalRev.Trim() $color
 }
 
 filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {

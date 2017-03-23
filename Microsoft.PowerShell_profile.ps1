@@ -236,13 +236,15 @@ function ss($Size) {
 	switch ($Size) {
 		1 { Set-Screen -Full }
 		2 { Set-Screen -Half }
+		3 { Set-Screen -TwoThirds }
 		4 { Set-Screen -Quarter }
 	}
 }
 
-function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter) {
+function Set-Screen([switch] $Full, [switch] $Half, [switch] $Quarter, [switch] $TwoThirds) {
 	function Main {	
 		if ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 5) ((Get-DisplaySize).Height - 1) }
+		if ($TwoThirds) { Set-PowerShellSize ((Get-DisplaySize).Width / 3 * 2) ((Get-DisplaySize).Height - 1) }
 		if ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
 		if ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
 		

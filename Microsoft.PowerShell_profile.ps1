@@ -101,13 +101,19 @@ function Write-SvnStatus {
 	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
 	
 	# Current directory is not part of an SVN working copy.
-	if ($svnLocalRev -like '*E155007*') {
+	if ($svnLocalRev -like 'svn: E155007*') {
+		return
+	}
+	
+	# Current directory has not been added to SVN.
+	if ($svnLocalRev -like 'svn: warning: W155010*') {
+		Write-Status 'not under version control' Red
 		return
 	}
 	
 	# Current directory is part of an SVN working copy, but SVN can still not find it.
 	# Probably a letter case issue, since the case of the paths passed to filesystem cmdlets (e.g. CD) is preserved.
-	if ($svnLocalRev -like '*E200009*') {
+	if ($svnLocalRev -like 'svn: E200009*') {
 		# Fix case of current working directory and try svn info again.
 		Get-Location | Resolve-PathCase | Set-Location
 		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1

@@ -133,7 +133,7 @@ function Write-SvnStatus {
 	
 	$color = if ($svnLocalRev -eq $svnHeadRev) {'Cyan'} else {'Red'}
 	$svnStatus = $svnLocalRev.Trim()
-	$svnStatus += if ($svnLocalRev -ne $svnHeadRev) {" ($($svnLocalRev - $svnHeadRev))"}
+	$svnStatus += if ($svnLocalRev -ne $svnHeadRev) {"/$($svnLocalRev - $svnHeadRev)"}
 	Write-Status $svnStatus.Trim() $color
 }
 

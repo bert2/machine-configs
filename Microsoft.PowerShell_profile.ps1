@@ -208,6 +208,20 @@ filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $
 	}
 }
 
+filter Test-Xml(
+	[Parameter(ValueFromPipeline = $true)]$XmlFile, 
+	$XsdFile, 
+	[scriptblock]$ValidationEventHandler = { 
+		Write-Host "Error in ${XmlFile}:`n`t$($args[1].Exception)" -ForegroundColor Red 
+	}) {
+	$xml = New-Object System.Xml.XmlDocument
+	$schemaReader = New-Object System.Xml.XmlTextReader (Resolve-Path $XsdFile).Path
+	$schema = [System.Xml.Schema.XmlSchema]::Read($schemaReader, $null)
+	$xml.Schemas.Add($schema) | Out-Null
+	$xml.Load((Resolve-Path $XmlFile).Path)
+	$xml.Validate($ValidationEventHandler)
+}
+
 function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
 	if (-not $Temp) {
 		if (-not (Test-Path $Path) -and -not $Force) {

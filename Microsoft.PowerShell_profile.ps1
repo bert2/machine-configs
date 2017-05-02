@@ -107,7 +107,7 @@ function Write-SvnStatus {
 	
 	# Current directory has not been added to SVN.
 	if ($svnLocalRev -like 'svn: warning: W155010*') {
-		Write-Status 'not under version control' Red
+		Write-Status "not VC'ed" Red
 		return
 	}
 	

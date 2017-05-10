@@ -67,8 +67,10 @@ function Search(
 	$Pattern, 
 	$Context = 0, 
 	$Include = @(), 
-	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache')) { 
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
+	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'}) { 
 	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
+	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String -Context $Context -AllMatches $Pattern `
 	| Colorize-MatchInfo
 }

@@ -198,6 +198,12 @@ function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::Ma
 	}
 }
 
+function WinMerge($Left, $Right) { 
+	$leftName = Split-Path -Leaf $Left
+	$rightName = Split-Path -Leaf $Right
+	WinMergeU.exe /e /s /u /wr /dl $leftName /dr $rightName $Left $Right 
+}
+
 filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $SuppressAssemblyLoadErrors) {
 	$path = $File.File | ?? $File.Path | ?? $File.FullName | ?? $File.FullPath | ?? $File
 	$absolutePath = Resolve-Path $path

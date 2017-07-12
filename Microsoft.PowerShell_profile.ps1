@@ -23,7 +23,6 @@ if (Test-Path ~\LocalPSProfile.ps1) {
 
 Set-Alias Open Invoke-Item
 Set-Alias :? Get-Help
-Set-Alias ?? If-Null
 Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 
@@ -37,7 +36,7 @@ function Max { $args | Measure-Object -Maximum | Select-Object -ExpandProperty M
 
 function Min { $args | Measure-Object -Minimum | Select-Object -ExpandProperty Minimum }
 
-function Expl($Path) { explorer.exe ($Path | ?? .) }
+function Expl($Path) { explorer.exe ($Path | If-Null .) }
 
 function Explr($Path) { Expl $Path }
 
@@ -48,7 +47,10 @@ function Prompt {
     
 	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
 	if (Get-Command svn -ErrorAction Ignore) { Write-SvnStatus }
-	if (Get-Command git -ErrorAction Ignore) { Write-VcsStatus }
+	if (Get-Command git -ErrorAction Ignore) { 
+		if (Test-Path .git) { git.exe fetch -q }
+		Write-VcsStatus 
+	}
 	Write-Host
 	
 	$LASTEXITCODE = $originalLastExitCode
@@ -69,11 +71,12 @@ function Search(
 	$Context = 0, 
 	$Include = @(), 
 	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
-	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'}) { 
+	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'},
+	[switch]$PassThru) { 
 	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String -Context $Context -AllMatches $Pattern `
-	| Colorize-MatchInfo
+	| % {if ($PassThru) {$_} else {Colorize-MatchInfo $_}}
 }
 
 function HardClean { 
@@ -146,7 +149,7 @@ filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	}
 	
-	Write-Host -NoNewLine -ForegroundColor Green $Item.LineNumber
+	Write-Host -NoNewLine -ForegroundColor Red $Item.LineNumber
 	Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	
 	if ($Item.Context -ne $null) {
@@ -161,7 +164,7 @@ filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 	foreach ($match in $Item.Matches) {
 		$lineParts = $matchLine -Split $match,2,'SimpleMatch,IgnoreCase'
 		Write-Host -NoNewLine $lineParts[0]
-		Write-Host -NoNewLine -ForegroundColor Red $match
+		Write-Host -NoNewLine -ForegroundColor Green $match
 		$matchLine = $lineParts[1]
 	}
 	
@@ -181,7 +184,7 @@ function New-Credential($UserName, $Password) {
 function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::MaxValue, $Depth = 0) {	
 	$indent = "   "
 	Write-Host -NoNewLine ($indent * $Depth)
-	Write-Host "$($Dir.Name | ?? (Resolve-Path . | Split-Path -Leaf))\"
+	Write-Host "$($Dir.Name | If-Null (Resolve-Path . | Split-Path -Leaf))\"
 
 	if ($Depth -gt $Limit) {
 		return
@@ -205,7 +208,7 @@ function WinMerge($Left, $Right) {
 }
 
 filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $SuppressAssemblyLoadErrors) {
-	$path = $File.File | ?? $File.Path | ?? $File.FullName | ?? $File.FullPath | ?? $File
+	$path = $File.File | If-Null $File.Path | If-Null $File.FullName | If-Null $File.FullPath | If-Null $File
 	$absolutePath = Resolve-Path $path
 	
 	try {
@@ -336,4 +339,21 @@ function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Positi
 	# This makes sure the $default is returned even when the input was an empty array or of type
 	# [System.Management.Automation.Internal.AutomationNull]::Value (which prevents execution of the Process block).
 	End { if (-not $processedSomething) { $default } }
+}
+
+function ConvertFrom-Gzip(
+	[Parameter(ValueFromPipeline=$True)][byte[]]$Bytes,
+	[ValidateSet('ASCII', 'Unicode', 'BigEndianUnicode', 'Default', 'UTF32', 'UTF7', 'UTF8')][String]$Encoding = 'ASCII') {
+	$input = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(,$Bytes)
+	$gzipStream = New-Object -TypeName System.IO.Compression.GZipStream -ArgumentList @($input, [System.IO.Compression.CompressionMode]::Decompress)
+	$output = New-Object -TypeName System.IO.MemoryStream
+	
+	$gzipStream.CopyTo($output)	
+	$data = $output.ToArray()
+	
+	$output.Close()
+	$gzipStream.Close()
+	$input.Close()
+	
+	([System.Text.Encoding]::$Encoding).GetString($data).Split("`n")
 }

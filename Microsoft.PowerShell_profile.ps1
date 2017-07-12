@@ -47,7 +47,7 @@ function Prompt {
     
 	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
 	if (Get-Command svn -ErrorAction Ignore) { Write-SvnStatus }
-	if (Get-Command git -ErrorAction Ignore) { 
+	if ((Get-Command git -ErrorAction Ignore) -and (Get-Module -ListAvailable -Name posh-git)) { 
 		if (Test-Path .git) { git.exe fetch -q }
 		Write-VcsStatus 
 	}

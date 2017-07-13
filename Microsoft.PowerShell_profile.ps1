@@ -46,11 +46,18 @@ function Prompt {
 	$originalLastExitCode = $LASTEXITCODE
     
 	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
-	if (Get-Command svn -ErrorAction Ignore) { Write-SvnStatus }
-	if ((Get-Command git -ErrorAction Ignore) -and (Get-Module -ListAvailable -Name posh-git)) { 
-		if (Test-Path .git) { git.exe fetch -q }
+	
+	if (Get-Command svn.exe -ErrorAction Ignore) { Write-SvnStatus }
+	
+	if ((Get-Command git.exe -ErrorAction Ignore) -and (Get-Module -ListAvailable -Name posh-git)) { 
+		if (Test-Path .git) {
+			Get-Job | ? Name -eq async-git-fetch | Remove-Job
+			Start-Job -Name async-git-fetch {git.exe fetch -q} | Out-Null
+		}
+		
 		Write-VcsStatus 
 	}
+	
 	Write-Host
 	
 	$LASTEXITCODE = $originalLastExitCode

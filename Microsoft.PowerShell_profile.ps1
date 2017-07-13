@@ -50,7 +50,7 @@ function Prompt {
 	if (Get-Command svn.exe -ErrorAction Ignore) { Write-SvnStatus }
 	
 	if ((Get-Command git.exe -ErrorAction Ignore) -and (Get-Module -ListAvailable -Name posh-git)) { 
-		if (Test-Path .git) {
+		if (git rev-parse --is-inside-work-tree 2>$null) {
 			Get-Job | ? Name -eq async-git-fetch | Remove-Job
 			Start-Job -Name async-git-fetch {git.exe fetch -q} | Out-Null
 		}

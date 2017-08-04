@@ -81,6 +81,42 @@ function Search(
 	| % {if ($PassThru) {$_} else {Colorize-MatchInfo $_}}
 }
 
+function Replace(
+	$Old, 
+	$New, 
+	$Include = @(), 
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
+	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'}) {
+	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
+	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
+	| Select-String $Old `
+	| Select-Object -Unique -ExpandProperty Path `
+	| ForEach-Object{ 
+		$enc = Get-Encoding $_
+		(Get-Content $_) `
+		| % { $_ -replace $Old,$New } `
+		| Set-Content $_ -Encoding $enc
+	}
+}
+
+function Get-Encoding($File) {
+    [byte[]]$byte = Get-Content -Encoding byte -ReadCount 4 -TotalCount 4 -Path $File
+
+    if ($byte[0] -eq 0xef -and $byte[1] -eq 0xbb -and $byte[2] -eq 0xbf ) {
+		'UTF8'
+	} elseif ($byte[0] -eq 0xfe -and $byte[1] -eq 0xff) {
+		'BigEndianUnicode'
+	} elseif ($byte[0] -eq 0xff -and $byte[1] -eq 0xfe) {
+		'Unicode'
+	} elseif ($byte[0] -eq 0 -and $byte[1] -eq 0 -and $byte[2] -eq 0xfe -and $byte[3] -eq 0xff) {
+		'UTF32'
+	} elseif ($byte[0] -eq 0x2b -and $byte[1] -eq 0x2f -and $byte[2] -eq 0x76) {
+		'UTF7'
+	} else {
+		'ASCII'
+	}
+}
+
 function HardClean { 
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }

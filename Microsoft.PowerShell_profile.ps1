@@ -1,24 +1,29 @@
-# Chocolatey profile
+function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation) {
+	Write-Host -NoNewline $PreText
+	$sw = [System.Diagnostics.StopWatch]::StartNew()
+	& $Operation
+	Write-Host "done (took $($sw.ElapsedMilliseconds)ms)."
+}
+
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path $ChocolateyProfile) {
-	Import-Module "$ChocolateyProfile"
+	Write-ElapsedMilliseconds 'Loading chocolatey profile' {Import-Module $ChocolateyProfile}
 }
 
 if (Get-Module -ListAvailable -Name PSReadline) {
-	Write-Host 'Loading module PSReadLine.'
-	Import-Module PSReadline
-	Set-PSReadlineKeyHandler -Key Tab -Function Complete
-	Set-PSReadlineOption -BellStyle None
+	Write-ElapsedMilliseconds 'Loading PSReadLine' {
+		Import-Module PSReadline
+		Set-PSReadlineKeyHandler -Key Tab -Function Complete
+		Set-PSReadlineOption -BellStyle None
+	}
 }
 
 if (Get-Module -ListAvailable -Name posh-git) {
-	Write-Host 'Loading module posh-git.'
-	Import-Module posh-git
+	Write-ElapsedMilliseconds 'Loading posh-git' {Import-Module posh-git}
 }
 
 if (Test-Path ~\LocalPSProfile.ps1) {
-	Write-Host 'Loading local PowerShell profile.'
-	. ~\LocalPSProfile.ps1	
+	Write-ElapsedMilliseconds 'Loading local PowerShell profile' {. ~\LocalPSProfile.ps1}
 }
 
 Set-Alias Open Invoke-Item

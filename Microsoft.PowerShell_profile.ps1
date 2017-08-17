@@ -1,7 +1,7 @@
-function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation) {
+function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation, [Switch]$ExportToOuterScope) {
 	Write-Host -NoNewline $PreText
 	$sw = [System.Diagnostics.StopWatch]::StartNew()
-	& $Operation
+	if ($ExportToOuterScope) {. $Operation} else {& $Operation}
 	Write-Host "done (took $($sw.ElapsedMilliseconds)ms)."
 }
 
@@ -19,11 +19,15 @@ if (Get-Module -ListAvailable -Name PSReadline) {
 }
 
 if (Get-Module -ListAvailable -Name posh-git) {
-	Write-ElapsedMilliseconds 'Loading posh-git' {Import-Module posh-git}
+	Write-ElapsedMilliseconds 'Loading posh-git' {
+		Import-Module posh-git
+	}
 }
 
 if (Test-Path ~\LocalPSProfile.ps1) {
-	Write-ElapsedMilliseconds 'Loading local PowerShell profile' {. ~\LocalPSProfile.ps1}
+	. Write-ElapsedMilliseconds 'Loading local PowerShell profile' {
+		. ~\LocalPSProfile.ps1
+	} -ExportToOuterScope
 }
 
 Set-Alias Open Invoke-Item

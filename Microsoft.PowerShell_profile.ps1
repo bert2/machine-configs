@@ -1,5 +1,5 @@
 function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation) {
-	Write-Host -NoNewline $PreText
+	Write-Host -NoNewline "$PreText..."
 	$sw = [System.Diagnostics.StopWatch]::StartNew()
 	& $Operation
 	Write-Host "done (took $($sw.ElapsedMilliseconds)ms)."

@@ -420,12 +420,13 @@ function google() {
 		[Parameter(ValueFromRemainingArguments = $true)] $searchTerms
 	)
 	
-	function Main() {		
+	function Main {		
 		if ($searchTerms.Count -eq 0) { return }
 	
-		$uri = "https://www.google.$TopLevelDomain/search?safe=off&q=$(($searchTerms | Escape-Uri) -join '+')"
+		$query = ($searchTerms | Escape-Uri) -join '+'
+		$url = "https://www.google.$TopLevelDomain/search?safe=off&q=$query"
 		
-		Invoke-WebRequest $uri `
+		Invoke-WebRequest $url `
 		| Parse-GoogleResponse `
 		| Print-SearchResult
 	}
@@ -443,8 +444,8 @@ function google() {
 			}
 		}
 	
-		# Search results are wrapped with <div class="g">...</div>. Except the second to last <div class="g">.
-		# That's always is some table we are not interested in. The table is wrapped with a <div id=_Oce>...</div>, 
+		# Search results are wrapped with <div class="g">...</div>. Except the second to last <div class="g">
+		# which is always some table we are not interested in. The table is wrapped with a <div id=_Oce>...</div>, 
 		# so let's filter using that. Also the very last <div class="g"> is always empty. Skip it by filtering 
 		# results with an undefined InnerHTML property.
 		$htmlDocument.ParsedHtml.GetElementsByTagName("div") `
@@ -467,7 +468,7 @@ function google() {
 	
 	filter Print-SearchResult {
 		Write-Host $_.Title
-		Write-Host $_.Link
+		Write-Host -ForegroundColor Yellow $_.Link
 		if ($_.Snippet) { Write-Host $_.Snippet -ForegroundColor DarkGray }
 		Write-Host
 	}

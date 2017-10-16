@@ -437,7 +437,7 @@ function google() {
 				# Google wraps regular links with /url?q=https://www.result.com/the-site/&sa=U&...
 				$Matches[1]
 			} elseif ($_ -match '^about:(/search\?q=.+)') {
-				# Links to new search start with /search?q=...
+				# Links to similar searches start with /search?q=...
 				"https://www.google.$TopLevelDomain$($Matches[1])"
 			} else {
 				$_
@@ -450,7 +450,7 @@ function google() {
 		# results with an undefined InnerHTML property.
 		$htmlDocument.ParsedHtml.GetElementsByTagName("div") `
 		| ?{ $_.Attributes["class"].NodeValue -eq 'g' } `
-		| ? InnerHTML -notmatch '^<DIV id=_Oce>.+' `
+		| ? InnerHTML -notmatch '^<div id=_Oce>.+' `
 		| ? InnerHTML `
 		| %{
 			# Search result title is an <h3 class="r"><a href="...">...</a></h3>.

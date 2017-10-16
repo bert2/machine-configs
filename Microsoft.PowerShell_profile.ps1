@@ -404,3 +404,77 @@ function ConvertFrom-Gzip(
 	
 	([System.Text.Encoding]::$Encoding).GetString($data).Split("`n")
 }
+
+filter Escape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
+	$uri | %{ [uri]::EscapeDataString($_) }
+}
+
+filter Unescape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
+	$uri | %{ [uri]::UnescapeDataString($_) }
+}
+
+function google() {
+	[CmdletBinding(PositionalBinding = $false)]
+	param(
+		$TopLevelDomain = 'com',
+		[Parameter(ValueFromRemainingArguments = $true)] $searchTerms
+	)
+	
+	function Main() {
+		Write-Warning ($searchTerms -join ', ' )
+		
+		if ($searchTerms.Count -eq 0) { return }
+	
+		$uri = "https://www.google.$TopLevelDomain/search?safe=off&q=$(($searchTerms | Escape-Uri) -join '+')"
+		
+		Write-Warning $uri
+		
+		Invoke-WebRequest $uri `
+		| Parse-GoogleResponse `
+		| Print-SearchResult
+	}
+	
+	function Parse-GoogleResponse([Parameter(ValueFromPipeline = $true)]$htmlDocument) {
+		filter Parse-GoogleLink {
+			if ($_ -match '^about:/url\?q=([^&]+)&.*') {
+				# Google wraps regular links with /url?q=https://www.result.com/the-site/&sa=U&...
+				$Matches[1]
+			} elseif ($_ -match '^about:(/search\?q=.+)') {
+				# Links to new search start with /search?q=...
+				"https://www.google.$TopLevelDomain$($Matches[1])"
+			} else {
+				$_
+			}
+		}
+	
+		# Search results are wrapped with <div class="g">...</div>. Except the second to last <div class="g">.
+		# That's always is some table we are not interested in. The table is wrapped with a <div id=_Oce>...</div>, 
+		# so let's filter using that. Also the very last <div class="g"> is always empty. Skip it by filtering 
+		# results with an undefined InnerHTML property.
+		$htmlDocument.ParsedHtml.GetElementsByTagName("div") `
+		| ?{ $_.Attributes["class"].NodeValue -eq 'g' } `
+		| ? InnerHTML -notmatch '^<DIV id=_Oce>.+' `
+		| ? InnerHTML `
+		| %{
+			# Search result title is an <h3 class="r"><a href="...">...</a></h3>.
+			$link = $_.GetElementsByTagName("h3") | %{ $_.GetElementsByTagName("a") }
+			# Text snippets are wrapped with <span class="st">...</span>
+			$snippet = $_.GetElementsByTagName("span") | ?{ $_.Attributes["class"].NodeValue -eq 'st' }
+			
+			@{
+				Title = $link.TextContent
+				Link = $link.Href | Parse-GoogleLink | Unescape-Uri
+				Snippet = $snippet.TextContent
+			}
+		}
+	}
+	
+	filter Print-SearchResult {
+		Write-Host $_.Title
+		Write-Host $_.Link
+		if ($_.Snippet) { Write-Host $_.Snippet -ForegroundColor DarkGray }
+		Write-Host
+	}
+	
+	Main
+}

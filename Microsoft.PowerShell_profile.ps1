@@ -420,14 +420,10 @@ function google() {
 		[Parameter(ValueFromRemainingArguments = $true)] $searchTerms
 	)
 	
-	function Main() {
-		Write-Warning ($searchTerms -join ', ' )
-		
+	function Main() {		
 		if ($searchTerms.Count -eq 0) { return }
 	
 		$uri = "https://www.google.$TopLevelDomain/search?safe=off&q=$(($searchTerms | Escape-Uri) -join '+')"
-		
-		Write-Warning $uri
 		
 		Invoke-WebRequest $uri `
 		| Parse-GoogleResponse `

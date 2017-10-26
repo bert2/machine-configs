@@ -281,18 +281,41 @@ filter Test-Xml(
 	$xml.Validate($ValidationEventHandler)
 }
 
-function Add-PathToEnvironment($Path, [switch] $Temp, [switch] $Force) {
+function Set-EnvVar() {
+	[CmdletBinding()]
+	param($Var, $Value, [switch]$Append, [switch]$Temp)
+
+	if ($Append) {
+		$oldValue = Invoke-Expression "`$env:$Var"
+		$Value = $oldValue + $Value
+	}
+		
 	if (-not $Temp) {
-		if (-not (Test-Path $Path) -and -not $Force) {
-			Write-Warning "Use -Force switch to permanently add non-existing directory $Path to PATH environment variable."
-			return
-		}
-	
-		[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$Path", [System.EnvironmentVariableTarget]::User)
-		Write-Host "Permanently added $path to PATH environment variable."
+		Write-Verbose "Update to $Var will be permanent."
+		[Environment]::SetEnvironmentVariable($Var, $Value, [System.EnvironmentVariableTarget]::User)
 	}
 	
-	$env:Path += ";$Path"
+	Invoke-Expression "`$env:$Var = '$Value'"
+	Write-Verbose "$Var set to new value '$Value'."
+}
+
+
+
+function Add-PathToEnvironment() {
+	[CmdletBinding()]
+	param($Path, [switch]$Temp, [switch]$Force)
+	
+	if (-not $Temp) {
+		Write-Host 'Updating PATH environment variable permanently...'
+		
+		if (-not (Test-Path $Path) -and -not $Force) {
+			Write-Warning "Directory $Path does not exist, stopping."
+			Write-Warning 'Use -Force switch to permanently add non-existing directories to PATH environment variable.'
+			return
+		}
+	}
+
+	Set-EnvVar 'Path' -Append -Value ";$Path" -Temp:$Temp
 }
 
 filter Resolve-PathCase(

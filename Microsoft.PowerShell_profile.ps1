@@ -436,18 +436,13 @@ filter Unescape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
 	$uri | %{ [uri]::UnescapeDataString($_) }
 }
 
-function google() {
-	[CmdletBinding(PositionalBinding = $false)]
-	param(
-		$TopLevelDomain = 'com',
-		[Parameter(ValueFromRemainingArguments = $true)] $searchTerms
-	)
-	
+function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms)
+{		
 	function Main {		
 		if ($searchTerms.Count -eq 0) { return }
 	
 		$query = ($searchTerms | Escape-Uri) -join '+'
-		$url = "https://www.google.$TopLevelDomain/search?safe=off&q=$query"
+		$url = "https://www.google.com/search?safe=off&q=$query"
 		
 		Invoke-WebRequest $url `
 		| Parse-GoogleResponse `
@@ -461,7 +456,7 @@ function google() {
 				$Matches[1]
 			} elseif ($_ -match '^about:(/search\?q=.+)') {
 				# Links to similar searches start with /search?q=...
-				"https://www.google.$TopLevelDomain$($Matches[1])"
+				"https://www.google.com$($Matches[1])"
 			} else {
 				$_
 			}

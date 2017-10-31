@@ -84,7 +84,7 @@ function Search(
 	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
 	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'},
 	[switch]$PassThru) { 
-	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
+	Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String -Context $Context -AllMatches $Pattern `
 	| % {if ($PassThru) {$_} else {Colorize-MatchInfo $_}}
@@ -96,7 +96,7 @@ function Replace(
 	$Include = @(), 
 	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
 	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'}) {
-	Get-ChildItem .\* -Recurse -Include $Include -Exclude $Exclude `
+	Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String $Old `
 	| Select-Object -Unique -ExpandProperty Path `

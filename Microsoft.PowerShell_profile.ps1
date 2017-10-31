@@ -70,7 +70,7 @@ function Prompt {
 
 function Locate($Filter, [switch]$MatchWholeWord) {
 	$Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
-	Get-ChildItem -Recurse -Filter $Filter `
+	Get-ChildItem -Recurse -Force -Filter $Filter `
 	| ForEach-Object {
 		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name

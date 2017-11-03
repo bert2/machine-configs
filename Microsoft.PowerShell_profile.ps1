@@ -82,7 +82,9 @@ function Search(
 	$Context = 0, 
 	$Include = @(), 
 	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
-	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'},
+	[ScriptBlock]$FilterPredicate = {
+		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*'
+	},
 	[switch]$PassThru) { 
 	Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
@@ -95,7 +97,9 @@ function Replace(
 	$New, 
 	$Include = @(), 
 	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
-	[ScriptBlock]$FilterPredicate = {$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*'}) {
+	[ScriptBlock]$FilterPredicate = {
+		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*'
+	}) {
 	Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String $Old `

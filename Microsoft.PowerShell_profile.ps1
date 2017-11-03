@@ -104,6 +104,7 @@ function Replace(
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String $Old `
 	| Select-Object -Unique -ExpandProperty Path `
+	| Where-Object { $_ -ne "InputStream" } `
 	| ForEach-Object{ 
 		$enc = Get-Encoding $_
 		(Get-Content $_) `

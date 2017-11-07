@@ -35,6 +35,8 @@ Set-Alias :? Get-Help
 Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 
+function la { ls -Force $args }
+
 function Desktop { Set-Location ~\Desktop }
 
 function MkLink { cmd.exe /c mklink $args }

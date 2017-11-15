@@ -53,6 +53,8 @@ function Explr($Path) { Expl $Path }
 
 function Profile { $profile | Split-Path -Parent | Set-Location }
 
+function Which { Get-Command $args | Select-Object -ExpandProperty Definition }
+
 function Prompt {
 	$originalLastExitCode = $LASTEXITCODE
     

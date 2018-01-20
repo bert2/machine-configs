@@ -1,0 +1,39 @@
+#!/bin/sh
+#
+# A hook script to decorate the commit log message with a ticket
+# number extracted from the name of the current branch.
+#
+# Ticket numbers are expected to have the Jira format "ABC-123".
+# Branche names are expected to have the BitBucket format
+# "foo/ABC-123-foo-bar". But names like "ABC-123" and 
+# "foo/ABC-123/bar" are supported as well.
+# If no ticket can be found in the branch name then the commit
+# log message will be left unchanged.
+# Append "#noref" to the start of the message in order to skip 
+# log message decoration (the "#noref" marker will be removed 
+# though).
+
+messageFile=$1
+message=$(cat $messageFile)
+marker="^#noref[[:space:]]*(.*)"
+
+# Don't prepend ticket ref when message starts with '#noref'.
+# Extract the '#noref' and continue with remaining message.
+if [[ $message =~ $marker ]]; then
+    messageWithoutMarker=${BASH_REMATCH[1]}
+    echo "$messageWithoutMarker" > $messageFile
+    cat $messageFile
+    exit 0
+fi
+
+branch=$(git symbolic-ref --short HEAD)
+# Extracts 'ABC-123' from 'ABC-123', 'ABC-123-foo', 'foo/ABC-123-bar', 
+# 'foo/bar/ABC-123-baz', or 'foo/ABC-123/bar'.
+ticketPrefix="^(.+/)?([[:alpha:]]+-[[:digit:]]+)"
+
+if [[ $branch =~ $ticketPrefix ]]; then 
+    ticket=${BASH_REMATCH[2]}
+    echo "${ticket}: ${message}" > $messageFile
+else
+    echo "Branch '$branch' doesn't contain a ticket number."
+fi

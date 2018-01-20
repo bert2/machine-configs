@@ -22,7 +22,6 @@ marker="^#noref[[:space:]]*(.*)"
 if [[ $message =~ $marker ]]; then
     messageWithoutMarker=${BASH_REMATCH[1]}
     echo "$messageWithoutMarker" > $messageFile
-    cat $messageFile
     exit 0
 fi
 

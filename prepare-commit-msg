@@ -4,7 +4,7 @@
 # number extracted from the name of the current branch.
 #
 # Ticket numbers are expected to have the Jira format "ABC-123".
-# Branche names are expected to have the BitBucket format
+# Branch names are expected to have the BitBucket format
 # "foo/ABC-123-foo-bar". But names like "ABC-123" and 
 # "foo/ABC-123/bar" are supported as well.
 # If no ticket can be found in the branch name then the commit
@@ -26,13 +26,13 @@ if [[ $message =~ $marker ]]; then
 fi
 
 branch=$(git symbolic-ref --short HEAD)
-# Extracts 'ABC-123' from 'ABC-123', 'ABC-123-foo', 'foo/ABC-123-bar', 
-# 'foo/bar/ABC-123-baz', or 'foo/ABC-123/bar'.
-ticketPrefix="^(.+/)?([[:alpha:]]+-[[:digit:]]+)"
+# Extracts 'ABC-123' from 'ABC-123', 'ABC-123-foo', 'foo/ABC-123',
+# 'foo/ABC-123-bar', 'foo/bar/ABC-123-baz', or 'foo/ABC-123/bar'.
+pathAndTicketPrefix="^(.+/)?([[:alpha:]]+-[[:digit:]]+)"
 
-if [[ $branch =~ $ticketPrefix ]]; then 
+if [[ $branch =~ $pathAndTicketPrefix ]]; then 
     ticket=${BASH_REMATCH[2]}
     echo "${ticket}: ${message}" > $messageFile
 else
-    echo "Branch '$branch' doesn't contain a ticket number."
+    echo "Branch '$branch' doesn't contain a ticket number. Log message will not be decorated."
 fi

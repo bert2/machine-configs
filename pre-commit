@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# A hook script to prevent unintentional commits to the master branch.
+# Called by "git commit" with no arguments. The hook exits with a 
+# non-zero status if it wants to stop the commit.
+
+branch=$(git branch | sed -nE 's/\* (\w+)/\1/p')
+
+if [ "$branch" == "master" ]; then
+	if [ "${allowCommitsToMaster,,}" != "true" ]; then
+		echo >&2 "Detected a commit to master, not commiting."
+		echo >&2 "Use the environment variable 'allowCommitsToMaster' to skip this check:"
+		echo >&2 '  PowerShell> $env:allowCommitsToMaster=$true'
+		echo >&2 '  bash> export allowCommitsToMaster=true'
+		exit 1
+	fi
+fi
+

@@ -1,24 +1,29 @@
 [alias]
-	unstage      = reset HEAD --
-	st           = status
-	ci           = commit
-	co           = checkout
-	di           = diff --color-words
-	dic          = diff --color-words=.
-	dis          = diff --color-words --staged
-	disc         = diff --color-words=. --staged
-	diffs        = diff --staged
-	sh           = show --color-words=.
-	lg           = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' -30
-	sprintlog    = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' --since='2 weeks'
-	mysprintlog  = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' --since='2 weeks' --author Robert
-	lastrev      = rev-list --count --no-merges HEAD
-	mybranch     = rev-parse --abbrev-ref HEAD
+	pl            = pull --prune
+	unstage		  = reset HEAD --
+	st			  = status
+	ci			  = commit
+	co			  = checkout
+	di			  = diff --color-words
+	dic			  = diff --color-words=.
+	dis			  = diff --color-words --staged
+	disc		  = diff --color-words=. --staged
+	diffs		  = diff --staged
+	sh			  = show --color-words=.
+	lg			  = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' -30
+	sprintlog	  = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' --since='2 weeks'
+	mysprintlog	  = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' --since='2 weeks' --author Robert
+	lastrev		  = rev-list --count --no-merges HEAD
+	mybranch	  = rev-parse --abbrev-ref HEAD
 	# Checkout our version of a file and add it
-	ours         = "!f() { git checkout --ours $@ && git add $@; }; f"
+	ours		  = "!f() { git checkout --ours $@ && git add $@; }; f"
 	# Checkout their version of a file and add it
-	theirs       = "!f() { git checkout --theirs $@ && git add $@; }; f"
-	git          = !exec git
+	theirs		  = "!f() { git checkout --theirs $@ && git add $@; }; f"
+	conflicts     = diff --name-only --diff-filter=U --relative
+	git           = !exec git
+    ignored-local = !git ls-files -v | grep "^[[:lower:]]"
+[http]
+	proxy = iproxy.rewe-touristik.com:8080
 [core]
 	pager = less -x4
 	autocrlf = false
@@ -26,21 +31,20 @@
 # colors: normal, black, red, green, yellow, blue, magenta, cyan, white
 # color modifiers: bold, dim, ul (underline), blink, reverse (swap fg and bg)
 #[color]
-#      ui = true
-#      interactive = true
-#      diff = auto
-#      branch = auto
-#      status = auto
+#	ui = true
+#	interactive = true
+#	diff = auto
+#	branch = auto
+#	status = auto
 #[color "status"]
-#      changed = red bold
-#      untracked = red bold
-#      added = green bold
+#	changed = red bold
+#	untracked = red bold
+#	added = green bold
 #[color "diff"]
-#      new = green bold
-#      old = red bold
+#	new = green bold
+#	old = red bold
 #[color "branch"]
-#      current = green bold
-#      remote = red bold
+#	current = green bold
+#	remote = red bold
 #[diff]
-#      tool = vimdiff
-[user]
+#	tool = vimdiff

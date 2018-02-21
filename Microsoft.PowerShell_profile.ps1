@@ -85,7 +85,7 @@ function Search(
 	$Pattern, 
 	$Context = 0, 
 	$Include = @(), 
-	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache', '*.bundle.js'),
 	[ScriptBlock]$FilterPredicate = {
 		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*'
 	},

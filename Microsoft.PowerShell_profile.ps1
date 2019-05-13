@@ -7,7 +7,9 @@ function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation, [Switch]$E
 
 $ChocolateyProfile = "$env:ChocolateyInstall\helpers\chocolateyProfile.psm1"
 if (Test-Path $ChocolateyProfile) {
-	Write-ElapsedMilliseconds 'Loading chocolatey profile' {Import-Module $ChocolateyProfile}
+	Write-ElapsedMilliseconds 'Loading chocolatey profile' {
+        Import-Module $ChocolateyProfile
+    }
 }
 
 if (Get-Module -ListAvailable -Name PSReadline) {
@@ -22,6 +24,14 @@ if (Get-Module -ListAvailable -Name posh-git) {
 	Write-ElapsedMilliseconds 'Loading posh-git' {
 		Import-Module posh-git
 	}
+}
+
+if (Get-Module -ListAvailable -Name oh-my-posh) {
+	Write-ElapsedMilliseconds 'Loading oh-my-posh' {
+		Import-Module oh-my-posh
+        Set-Theme Paradox
+	}
+    $DefaultUser = 'bert'
 }
 
 if (Test-Path ~\LocalPSProfile.ps1) {
@@ -54,23 +64,6 @@ function Explr($Path) { Expl $Path }
 function Profile { $profile | Split-Path -Parent | Set-Location }
 
 function Which { Get-Command $args | Select-Object -ExpandProperty Definition }
-
-function Prompt {
-	$originalLastExitCode = $LASTEXITCODE
-    
-	Write-Host -NoNewline -ForegroundColor Cyan $ExecutionContext.SessionState.Path.CurrentLocation
-	
-	if (Get-Command svn.exe -ErrorAction Ignore) { Write-SvnStatus }
-	
-	if ((Get-Command git.exe -ErrorAction Ignore) -and (Get-Module -ListAvailable -Name posh-git)) { 
-		Write-VcsStatus 
-	}
-	
-	Write-Host
-	
-	$LASTEXITCODE = $originalLastExitCode
-	"$('>' * ($NestedPromptLevel + 1)) "
-}
 
 function Locate($Filter, [switch]$MatchWholeWord) {
 	$Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
@@ -139,69 +132,9 @@ function HardClean {
 	Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName } 
 }
 
-function SvnForAll([Parameter(Mandatory=$true)][ValidateSet('?', 'A', 'M', 'D', 'R', '*')]$Status, $SvnCommand, $ExternalCommand) {
-	$statusPattern = switch ($Status) {
-			'?' {'\?'}
-			'*' {'.'}
-			default {$Status}
-		}
-	$command = if ($SvnCommand) {"svn.exe $SvnCommand"} else {$ExternalCommand}
-	
-	svn.exe status `
-	| ?{ $_ -match "^$statusPattern" } `
-	| %{ $_ -replace "^$statusPattern\s+", '' } `
-	| %{ Invoke-Expression "$command '$_'" }
-}
-
-function Write-SvnStatus {
-	function Write-Status($status, $color) {
-		Write-Host -NoNewline -ForegroundColor Yellow ' ['
-		Write-Host -NoNewline -ForegroundColor $color $status		
-		Write-Host -NoNewline -ForegroundColor Yellow ']'
-	}
-
-	$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
-	
-	# Current directory is not part of an SVN working copy.
-	if ($svnLocalRev -like 'svn: E155007*') {
-		return
-	}
-	
-	# Current directory has not been added to SVN.
-	if ($svnLocalRev -like 'svn: warning: W155010*') {
-		Write-Status "not VC'ed" Red
-		return
-	}
-	
-	# Current directory is part of an SVN working copy, but SVN can still not find it.
-	# Probably a letter case issue, since the case of the paths passed to filesystem cmdlets (e.g. CD) is preserved.
-	if ($svnLocalRev -like 'svn: E200009*') {
-		# Fix case of current working directory and try svn info again.
-		Get-Location | Resolve-PathCase | Set-Location
-		$svnLocalRev = svn.exe info --show-item last-changed-revision 2>&1
-	}
-	
-	if ($svnLocalRev -match '^svn: E\d+') {
-		Write-Status $svnLocalRev Red
-		return
-	}
-	
-	$svnHeadRev = svn.exe info -r HEAD --show-item last-changed-revision 2>&1
-	
-	if ($svnHeadRev -match '^svn: E\d+') {
-		Write-Status $svnHeadRev Red
-		return
-	}
-	
-	$color = if ($svnLocalRev -eq $svnHeadRev) {'Cyan'} else {'Red'}
-	$svnStatus = $svnLocalRev.Trim()
-	$svnStatus += if ($svnLocalRev -ne $svnHeadRev) {"/$($svnLocalRev - $svnHeadRev)"}
-	Write-Status $svnStatus.Trim() $color
-}
-
 filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
 	if (Test-Path $Item.Path) {
-		Write-Host -NoNewLine -ForegroundColor Magenta ($Item.Path | Resolve-Path -Relative)
+		Write-Host -NoNewLine -ForegroundColor DarkYellow ($Item.Path | Resolve-Path -Relative)
 		Write-Host -NoNewLine -ForegroundColor Cyan ":"
 	}
 	
@@ -308,8 +241,6 @@ function Set-EnvVar() {
 	Write-Verbose "$Var set to new value '$Value'."
 }
 
-
-
 function Add-PathToEnvironment() {
 	[CmdletBinding()]
 	param($Path, [switch]$Temp, [switch]$Force)
@@ -325,86 +256,6 @@ function Add-PathToEnvironment() {
 	}
 
 	Set-EnvVar 'Path' -Append -Value ";$Path" -Temp:$Temp
-}
-
-filter Resolve-PathCase(
-	[Parameter(ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)] $Path) {
-
-	$Path = if ($Path -is [IO.DirectoryInfo]) {$Path} else {Get-Item $Path}
-	$parent = $Path.Parent
-
-	if (-not $parent) {
-		# Resolve-Path corrects case of filesystem roots (e.g. c:\ becomes C:\).
-		Resolve-Path $Path.Name
-		return
-	}
-
-	$parent `
-	| Resolve-PathCase `
-	| Join-Path -ChildPath $parent.GetDirectories($Path.Name).Name `
-	| Resolve-Path
-}
-
-function ss($Size) {
-	switch ($Size) {
-		1 { Set-Screen -Full }
-		2 { Set-Screen -Half }
-		3 { Set-Screen -TwoThirds }
-		4 { Set-Screen -Quarter }
-	}
-}
-
-function Set-Screen(
-	[switch]$Full, [switch]$Half, [switch]$Quarter, [switch]$TwoThirds, $Width, $Height) {
-	function Main {	
-		if ($Width -and $Height) { Set-PowerShellSize $Width $Height }
-		if ($Full) { Set-PowerShellSize ((Get-DisplaySize).Width - 5) ((Get-DisplaySize).Height - 1) }
-		if ($TwoThirds) { Set-PowerShellSize ((Get-DisplaySize).Width / 3 * 2) ((Get-DisplaySize).Height - 1) }
-		if ($Half) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height - 1) }
-		if ($Quarter) { Set-PowerShellSize ((Get-DisplaySize).Width / 2) ((Get-DisplaySize).Height / 2) }
-		
-		Write-Host "Current size: $((Get-PSWindow).WindowSize)"
-	}
-
-	function Set-PowerShellSize($Width, $Height) {
-		$bufferSize = (Get-PSWindow).BufferSize
-
-		if ($bufferSize.Width -lt $Width) {
-			Set-BufferSize $Width 9999
-			Set-WindowSize $Width $Height
-		} else {
-			Set-WindowSize $Width $Height
-			Set-BufferSize $Width 9999
-		}
-	}
-	
-	function Set-BufferSize($Width, $Height) {
-		$newSize = (Get-PSWindow).BufferSize
-		$newSize.Width = $Width
-		$newSize.Height = $Height
-		(Get-PSWindow).BufferSize = $newSize
-	}
-
-	function Set-WindowSize($Width, $Height) {
-		$maxHeight = (Get-PSWindow).MaxWindowSize.Height
-		$newSize = (Get-PSWindow).WindowSize
-		$newSize.Width = $Width
-		$newSize.Height = (Min $Height $maxHeight)
-		(Get-PSWindow).WindowSize = $newSize
-	}
-	
-	function Get-DisplaySize {
-		$oldBufferSize = (Get-PSWindow).BufferSize
-		# Window size is restricted by the current buffer size. Increase buffer before querying the maximum window size.
-		Set-BufferSize 500 500
-		$maxSize = (Get-PSWindow).MaxWindowSize 
-		Set-BufferSize $oldBufferSize.Width $oldBufferSize.Height
-		$maxSize
-	}
-	
-	function Get-PSWindow { (Get-Host).UI.RawUI }
-	
-	Main
 }
 
 function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Position = 0)]$default) {
@@ -496,7 +347,7 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms)
 	filter Print-SearchResult {
 		Write-Host $_.Title
 		Write-Host -ForegroundColor Yellow $_.Link
-		if ($_.Snippet) { Write-Host $_.Snippet -ForegroundColor DarkGray }
+		if ($_.Snippet) { Write-Host $_.Snippet -ForegroundColor Gray }
 		Write-Host
 	}
 	

@@ -296,8 +296,8 @@ filter Unescape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
 	$uri | %{ [uri]::UnescapeDataString($_) }
 }
 
-function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms)
-{		
+function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {		
+
 	function Main {		
 		if ($searchTerms.Count -eq 0) { return }
 	
@@ -322,24 +322,47 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms)
 			}
 		}
 	
-		# Search results are wrapped with <div class="g">...</div>. Except the second to last <div class="g">
-		# which is always some table we are not interested in. The table is wrapped with a <div id=_Oce>...</div>, 
-		# so let's filter using that. Also the very last <div class="g"> is always empty. Skip it by filtering 
-		# results with an undefined InnerHTML property.
+		# Search results are wrapped with <div class="ZINbbc xpd O9g5cc uUPGi">...</div>. Except the first and the last
+        # one, which are both some tables we are not interested in.
 		$htmlDocument.ParsedHtml.GetElementsByTagName("div") `
-		| ?{ $_.Attributes["class"].NodeValue -eq 'g' } `
-		| ? InnerHTML -notmatch '^<div id=_Oce>.+' `
-		| ? InnerHTML `
+		| ?{ $_.Attributes["class"].NodeValue -eq 'ZINbbc xpd O9g5cc uUPGi' } `
+        | select -Skip 1 `
+        | select -Last 100 -Skip 1 `
 		| %{
-			# Search result title is an <h3 class="r"><a href="...">...</a></h3>.
-			$link = $_.GetElementsByTagName("h3") | %{ $_.GetElementsByTagName("a") }
-			# Text snippets are wrapped with <span class="st">...</span>
-			$snippet = $_.GetElementsByTagName("span") | ?{ $_.Attributes["class"].NodeValue -eq 'st' }
+			# Search result title structure:
+            #
+            # <div class="kCrYT">
+            #   <a href=" { LINK } ">
+            #     <div class="BNeawe vvjwJb AP7Wnd"> { TITLE } </div>
+            #     <div class="BNeawe UPmit AP7Wnd"> { BREAD CRUMBS } </div>
+            #   </a>
+            # </div>
+            # <div class="x54gtf"></div>
+            # <div class="kCrYT">
+            #   <div>
+            #     <div class="BNeawe s3v9rd AP7Wnd">
+            #       <div>
+            #         <div>
+            #           <div class="BNeawe s3v9rd AP7Wnd"> { SNIPPET } </div>
+            #         </div>
+            #       </div>
+            #     </div>
+            #   </div>
+            # </div>
+            $containers = $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'kCrYT' }
+			$link = $containers `
+                | select -First 1 `
+                | %{ $_.GetElementsByTagName("a") }
+			$title = $link.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe vvjwJb AP7Wnd' }
+            $snippet = $containers `
+                | select -Last 1 `
+                | %{ $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } } `
+                | %{ $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } }
 			
 			@{
-				Title = $link.TextContent
+				Title = $title.InnerText
 				Link = $link.Href | Parse-GoogleLink | Unescape-Uri
-				Snippet = $snippet.TextContent
+				Snippet = $snippet.InnerText
 			}
 		}
 	}

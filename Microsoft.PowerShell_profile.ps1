@@ -69,7 +69,7 @@ function Locate($Filter, [switch]$MatchWholeWord) {
 	$Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
 	Get-ChildItem -Recurse -Force -Filter $Filter `
 	| ForEach-Object {
-		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor Gray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name
 	}
 }
@@ -78,7 +78,7 @@ function Search(
 	$Pattern, 
 	$Context = 0, 
 	$Include = @(), 
-	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache'),
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache', '*.dbmdl', '*.jfm'),
 	[ScriptBlock]$FilterPredicate = {
 		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*'
 	},
@@ -153,7 +153,7 @@ filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 	foreach ($match in $Item.Matches) {
 		$lineParts = $matchLine -Split $match,2,'SimpleMatch,IgnoreCase'
 		Write-Host -NoNewLine $lineParts[0]
-		Write-Host -NoNewLine -ForegroundColor Green $match
+		Write-Host -NoNewLine -BackgroundColor DarkGreen $match
 		$matchLine = $lineParts[1]
 	}
 	

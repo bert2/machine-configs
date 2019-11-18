@@ -12,6 +12,7 @@
     sh             = show --color-words=.
     lg             = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' -30
     mybranch       = rev-parse --abbrev-ref HEAD
+	cbr            = mybranch
     # Checkout our version of a file and add it
     ours           = "!f() { git checkout --ours $@ && git add $@; }; f"
     # Checkout their version of a file and add it
@@ -21,9 +22,12 @@
     ignore-local   = update-index --assume-unchanged
     unignore-local = update-index --no-assume-unchanged
     ignored-local  = !git ls-files -v | grep "^[[:lower:]]"
+	cleanup        = !git branch --merged | grep -vE '^(\\* |. develop|. master)' | xargs -n 1 -r git branch -d
 [http]
 	proxy = <your proxy>
 [core]
     pager = less -x4
 	autocrlf = false
     editor = vim
+[color "diff"]
+    meta = yellow bold

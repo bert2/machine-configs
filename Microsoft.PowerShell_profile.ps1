@@ -46,6 +46,8 @@ Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 Set-Alias g git
 
+function rmrf { rm -Recurse -Force $args }
+
 function la { ls -Force $args }
 
 function Desktop { Set-Location ~\Desktop }
@@ -70,24 +72,24 @@ function Locate($Filter, [switch]$MatchWholeWord) {
 	$Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
 	Get-ChildItem -Recurse -Force -Filter $Filter `
 	| ForEach-Object {
-		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor Gray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name
 	}
 }
 
 function Search(
-	$Pattern, 
+	$Pattern,
 	$Context = 0, 
 	$Include = @(), 
-	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache', '*.dbmdl', '*.jfm'),
+	$Exclude = @('*.exe', '*.dll', '*.pdb', '*ResolveAssemblyReference.cache', '*.dbmdl', '*.jfm', '*.bak'),
 	[ScriptBlock]$FilterPredicate = {
-		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*'
+		$_ -notlike '*\bin\*' -and $_ -notlike '*\obj\*' -and $_ -notlike '*\.git\*' -and $_ -notlike '*\.vs\*' -and $_ -notlike '*\node_modules\*' -and $_ -notlike '*\dist\*'
 	},
 	[switch]$PassThru) { 
 	Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
 	| Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
 	| Select-String -Context $Context -AllMatches $Pattern `
-	| % {if ($PassThru) {$_} else {Colorize-MatchInfo $_}}
+	| ForEach-Object { if ($PassThru) {$_.Path} else {Colorize-MatchInfo $_} }
 }
 
 function Replace(

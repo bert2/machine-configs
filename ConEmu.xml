@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <key name="Software">
 	<key name="ConEmu">
-		<key name=".Vanilla" modified="2019-05-11 14:00:46" build="190331">
+		<key name=".Vanilla" modified="2020-07-01 00:00:14" build="191012">
 			<value name="StartType" type="hex" data="02"/>
 			<value name="CmdLine" type="string" data=""/>
 			<value name="StartTasksFile" type="string" data=""/>
@@ -21,7 +21,7 @@
 			<value name="ColorTable10" type="dword" data="0007cd65"/>
 			<value name="ColorTable11" type="dword" data="00b6c032"/>
 			<value name="ColorTable12" type="dword" data="002257ff"/>
-			<value name="ColorTable13" type="dword" data="001e1e1e"/>
+			<value name="ColorTable13" type="dword" data="00cf30cf"/>
 			<value name="ColorTable14" type="dword" data="0000ffff"/>
 			<value name="ColorTable15" type="dword" data="00ffffff"/>
 			<value name="ColorTable16" type="dword" data="00000000"/>
@@ -43,9 +43,9 @@
 			<value name="ExtendColors" type="hex" data="01"/>
 			<value name="ExtendColorIdx" type="hex" data="0f"/>
 			<value name="TextColorIdx" type="hex" data="0F"/>
-			<value name="BackColorIdx" type="hex" data="0D"/>
-			<value name="PopTextColorIdx" type="hex" data="0D"/>
-			<value name="PopBackColorIdx" type="hex" data="0D"/>
+			<value name="BackColorIdx" type="hex" data="00"/>
+			<value name="PopTextColorIdx" type="hex" data="00"/>
+			<value name="PopBackColorIdx" type="hex" data="01"/>
 			<value name="SingleInstance" type="hex" data="00"/>
 			<value name="QuakeStyle" type="hex" data="00"/>
 			<value name="KeyboardHooks" type="hex" data="01"/>
@@ -374,7 +374,7 @@
 			<value name="ConsoleFontName" type="string" data="Lucida Console"/>
 			<value name="ConsoleFontWidth" type="long" data="3"/>
 			<value name="ConsoleFontHeight" type="long" data="5"/>
-			<value name="DefaultBufferHeight" type="long" data="1000"/>
+			<value name="DefaultBufferHeight" type="long" data="32766"/>
 			<value name="AutoBufferHeight" type="hex" data="01"/>
 			<value name="UseScrollLock" type="hex" data="01"/>
 			<value name="CmdOutputCP" type="long" data="0"/>
@@ -506,7 +506,7 @@
 			<value name="TabsLocation" type="hex" data="00"/>
 			<value name="TabIcons" type="hex" data="01"/>
 			<value name="OneTabPerGroup" type="hex" data="00"/>
-			<value name="ActivateSplitMouseOver" type="hex" data="01"/>
+			<value name="ActivateSplitMouseOver" type="hex" data="00"/>
 			<value name="TabSelf" type="hex" data="01"/>
 			<value name="TabLazy" type="hex" data="01"/>
 			<value name="TabFlashChanged" type="long" data="8"/>
@@ -749,6 +749,11 @@
 			<value name="DynamicBufferHeight" type="hex" data="01"/>
 			<value name="AutoTrimSingleLine" type="hex" data="00"/>
 			<value name="StatusBar.Hide.WMode" type="hex" data="01"/>
+			<value name="CmdLineHistory" type="multi">
+				<line data="{Helper::Show ANSI colors}"/>
+			</value>
+			<value name="AutoReloadEnvironment" type="hex" data="01"/>
+			<value name="StatusBar.Hide.InputGrouping" type="hex" data="00"/>
 		</key>
 	</key>
 </key>

@@ -44,6 +44,7 @@ Set-Alias Open Invoke-Item
 Set-Alias :? Get-Help
 Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
+Set-Alias g git
 
 function la { ls -Force $args }
 
@@ -69,7 +70,7 @@ function Locate($Filter, [switch]$MatchWholeWord) {
 	$Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
 	Get-ChildItem -Recurse -Force -Filter $Filter `
 	| ForEach-Object {
-		Write-Host -ForegroundColor Gray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
+		Write-Host -ForegroundColor DarkGray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
 		Write-Host -ForegroundColor Green  $_.Name
 	}
 }
@@ -271,21 +272,28 @@ function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Positi
 	End { if (-not $processedSomething) { $default } }
 }
 
-function ConvertFrom-Gzip(
+# ConvertFrom-Compressed -Type DeflateStream -Encoding UTF8 -Bytes $(cat <file> -Encoding Byte)
+function ConvertFrom-Compressed(
 	[Parameter(ValueFromPipeline=$True)][byte[]]$Bytes,
-	[ValidateSet('ASCII', 'Unicode', 'BigEndianUnicode', 'Default', 'UTF32', 'UTF7', 'UTF8')][String]$Encoding = 'ASCII') {
+	[ValidateSet('ASCII', 'Bytes', 'Unicode', 'BigEndianUnicode', 'Default', 'UTF32', 'UTF7', 'UTF8')][String]$Encoding = 'ASCII',
+    [ValidateSet('DeflateStream', 'GZipStream')][String]$Type = 'GZipStream') {
+    if ($Type -eq 'DeflateStream') { $Bytes = $Bytes | select -Skip 2 }
 	$input = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(,$Bytes)
-	$gzipStream = New-Object -TypeName System.IO.Compression.GZipStream -ArgumentList @($input, [System.IO.Compression.CompressionMode]::Decompress)
+	$comprStream = New-Object -TypeName System.IO.Compression.$Type -ArgumentList @($input, [System.IO.Compression.CompressionMode]::Decompress)
 	$output = New-Object -TypeName System.IO.MemoryStream
 	
-	$gzipStream.CopyTo($output)	
+	$comprStream.CopyTo($output)	
 	$data = $output.ToArray()
 	
 	$output.Close()
-	$gzipStream.Close()
+	$comprStream.Close()
 	$input.Close()
 	
-	([System.Text.Encoding]::$Encoding).GetString($data).Split("`n")
+    if ($Encoding -eq 'Bytes') {
+        $data
+    } else {
+        ([System.Text.Encoding]::$Encoding).GetString($data).Split("`n")
+    }
 }
 
 filter Escape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
@@ -329,7 +337,7 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {
         | select -Skip 1 `
         | select -Last 100 -Skip 1 `
 		| %{
-			# Search result title structure:
+			# Search result structure:
             #
             # <div class="kCrYT">
             #   <a href=" { LINK } ">

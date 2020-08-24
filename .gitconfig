@@ -23,6 +23,7 @@
     unignore-local = update-index --no-assume-unchanged
     ignored-local  = !git ls-files -v | grep "^[[:lower:]]"
 	cleanup        = !git branch --merged | grep -vE '^(\\* |. develop|. master)' | xargs -n 1 -r git branch -d
+    new            = !git init && git symbolic-ref HEAD refs/heads/main
 [http]
 	proxy = <your proxy>
 [core]

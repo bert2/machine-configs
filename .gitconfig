@@ -1,6 +1,7 @@
 [alias]
+    a              = add
+    r              = reset HEAD --
     pl             = pull --prune
-    unstage        = reset HEAD --
     st             = status
     ci             = commit
     co             = checkout
@@ -12,23 +13,33 @@
     sh             = show --color-words=.
     lg             = log --graph --abbrev-commit --date=relative --pretty=format:'%C(dim white)%h%C(reset) %C(auto)%d %s %C(green)(%cr) %C(cyan)<%an>%C(reset)' -30
     mybranch       = rev-parse --abbrev-ref HEAD
-	cbr            = mybranch
+    cbr            = mybranch
+    pushnew        = push -u origin HEAD
     # Checkout our version of a file and add it
     ours           = "!f() { git checkout --ours $@ && git add $@; }; f"
     # Checkout their version of a file and add it
     theirs         = "!f() { git checkout --theirs $@ && git add $@; }; f"
     conflicts      = diff --name-only --diff-filter=U --relative
     git            = !exec git
+	g              = git
     ignore-local   = update-index --assume-unchanged
     unignore-local = update-index --no-assume-unchanged
     ignored-local  = !git ls-files -v | grep "^[[:lower:]]"
-	cleanup        = !git branch --merged | grep -vE '^(\\* |. develop|. master)' | xargs -n 1 -r git branch -d
-    new            = !git init && git symbolic-ref HEAD refs/heads/main
+    cleanup        = !git branch --merged | grep -vE '^(\\* |. develop|. master)' | xargs -n 1 -r git branch -d
 [http]
-	proxy = <your proxy>
+    proxy = <your proxy>
 [core]
     pager = less -x4
+	#pager = delta
 	autocrlf = false
     editor = vim
 [color "diff"]
     meta = yellow bold
+[delta]
+    side-by-side = true
+[mergetool]
+    prompt = false
+    keepBackup = false
+[merge]
+    tool = vimdiff
+    conflictstyle = diff3

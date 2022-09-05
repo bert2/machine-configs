@@ -1,7 +1,7 @@
 function Write-ElapsedMilliseconds($PreText, [ScriptBlock]$Operation, [Switch]$ExportToOuterScope) {
     Write-Host -NoNewline "$PreText..."
     $sw = [System.Diagnostics.StopWatch]::StartNew()
-    if ($ExportToOuterScope) {. $Operation} else {& $Operation}
+    if ($ExportToOuterScope) { . $Operation } else { & $Operation }
     Write-Host "done (took $($sw.ElapsedMilliseconds)ms)."
 }
 
@@ -46,9 +46,9 @@ Set-Alias Col Colorize-MatchInfo
 Set-Alias Tree Print-DirectoryTree
 Set-Alias g git
 
-function rmrf { rm -Recurse -Force $args }
+function rmrf { Remove-Item -Recurse -Force $args }
 
-function la { ls -Force $args }
+function la { Get-ChildItem -Force $args }
 
 function Desktop { Set-Location ~\Desktop }
 
@@ -68,12 +68,17 @@ function Profile { $profile | Split-Path -Parent | Set-Location }
 
 function Which { Get-Command $args | Select-Object -ExpandProperty Definition }
 
-function Locate($Filter, [switch]$MatchWholeWord) {
-    $Filter = if ($MatchWholeWord) {$Filter} else {"*$Filter*"}
+function Locate($Filter, [switch]$MatchWholeWord, [switch]$PassThru) {
+    $Filter = if ($MatchWholeWord) { $Filter } else { "*$Filter*" }
     Get-ChildItem -Recurse -Force -Filter $Filter `
     | ForEach-Object {
-        Write-Host -ForegroundColor Gray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
-        Write-Host -ForegroundColor Green  $_.Name
+        if ($PassThru) {
+            $_.FullName | Resolve-Path -Relative
+        }
+        else {
+            Write-Host -ForegroundColor Gray -NoNewLine "$($_.FullName | Split-Path -Parent | Resolve-Path -Relative)\"
+            Write-Host -ForegroundColor Green  $_.Name
+        }
     }
 }
 
@@ -89,7 +94,7 @@ function Search(
     Get-ChildItem .\* -Recurse -Force -Include $Include -Exclude $Exclude `
     | Where-Object { -not $FilterPredicate -or (& $FilterPredicate $_) } `
     | Select-String -Context $Context -AllMatches $Pattern `
-    | ForEach-Object { if ($PassThru) {$_.Path} else {Colorize-MatchInfo $_} }
+    | ForEach-Object { if ($PassThru) { $_.Path } else { Colorize-MatchInfo $_ } }
 }
 
 function Replace(
@@ -105,10 +110,10 @@ function Replace(
     | Select-String $Old `
     | Select-Object -Unique -ExpandProperty Path `
     | Where-Object { $_ -ne "InputStream" } `
-    | ForEach-Object{
+    | ForEach-Object {
         $enc = Get-Encoding $_
         (Get-Content $_) `
-        | % { $_ -replace $Old,$New } `
+        | % { $_ -replace $Old, $New } `
         | Set-Content $_ -Encoding $enc
     }
 }
@@ -118,21 +123,26 @@ function Get-Encoding($File) {
 
     if ($byte[0] -eq 0xef -and $byte[1] -eq 0xbb -and $byte[2] -eq 0xbf ) {
         'UTF8'
-    } elseif ($byte[0] -eq 0xfe -and $byte[1] -eq 0xff) {
+    }
+    elseif ($byte[0] -eq 0xfe -and $byte[1] -eq 0xff) {
         'BigEndianUnicode'
-    } elseif ($byte[0] -eq 0xff -and $byte[1] -eq 0xfe) {
+    }
+    elseif ($byte[0] -eq 0xff -and $byte[1] -eq 0xfe) {
         'Unicode'
-    } elseif ($byte[0] -eq 0 -and $byte[1] -eq 0 -and $byte[2] -eq 0xfe -and $byte[3] -eq 0xff) {
+    }
+    elseif ($byte[0] -eq 0 -and $byte[1] -eq 0 -and $byte[2] -eq 0xfe -and $byte[3] -eq 0xff) {
         'UTF32'
-    } elseif ($byte[0] -eq 0x2b -and $byte[1] -eq 0x2f -and $byte[2] -eq 0x76) {
+    }
+    elseif ($byte[0] -eq 0x2b -and $byte[1] -eq 0x2f -and $byte[2] -eq 0x76) {
         'UTF7'
-    } else {
+    }
+    else {
         'ASCII'
     }
 }
 
 function HardClean {
-    Get-ChildItem -Recurse -Directory -Include bin,obj,packages | %{ Remove-Item -Recurse -Force $_.FullName }
+    Get-ChildItem -Recurse -Directory -Include bin, obj, packages | % { Remove-Item -Recurse -Force $_.FullName }
 }
 
 filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.PowerShell.Commands.MatchInfo] $Item) {
@@ -154,7 +164,7 @@ filter Colorize-MatchInfo([Parameter(ValueFromPipeline = $true)][Microsoft.Power
 
     $matchLine = $Item.Line;
     foreach ($match in $Item.Matches) {
-        $lineParts = $matchLine -Split $match,2,'SimpleMatch,IgnoreCase'
+        $lineParts = $matchLine -Split $match, 2, 'SimpleMatch,IgnoreCase'
         Write-Host -NoNewLine $lineParts[0]
         Write-Host -NoNewLine -BackgroundColor DarkGreen $match
         $matchLine = $lineParts[1]
@@ -186,7 +196,8 @@ function Print-DirectoryTree([IO.DirectoryInfo] $Dir = $null, $Limit = [int]::Ma
     | ForEach-Object {
         if ($_ -is [IO.DirectoryInfo]) {
             Print-DirectoryTree $_ $Limit ($Depth + 1)
-        } else {
+        }
+        else {
             Write-Host -NoNewLine ($indent * ($Depth + 1))
             Write-Host $_.Name
         }
@@ -205,7 +216,8 @@ filter Get-AssemblyName([Parameter(ValueFromPipeline = $true)] $File, [switch] $
 
     try {
         [System.Reflection.AssemblyName]::GetAssemblyName($absolutePath)
-    } catch [BadImageFormatException] {
+    }
+    catch [BadImageFormatException] {
         if (-not $SuppressAssemblyLoadErrors) {
             throw
         }
@@ -276,11 +288,11 @@ function If-Null([Parameter(ValueFromPipeline = $true)]$value, [Parameter(Positi
 
 # ConvertFrom-Compressed -Type DeflateStream -Encoding UTF8 -Bytes $(cat <file> -Encoding Byte)
 function ConvertFrom-Compressed(
-    [Parameter(ValueFromPipeline=$True)][byte[]]$Bytes,
+    [Parameter(ValueFromPipeline = $True)][byte[]]$Bytes,
     [ValidateSet('ASCII', 'Bytes', 'Unicode', 'BigEndianUnicode', 'Default', 'UTF32', 'UTF7', 'UTF8')][String]$Encoding = 'ASCII',
     [ValidateSet('DeflateStream', 'GZipStream')][String]$Type = 'GZipStream') {
     if ($Type -eq 'DeflateStream') { $Bytes = $Bytes | select -Skip 2 }
-    $input = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(,$Bytes)
+    $input = New-Object -TypeName System.IO.MemoryStream -ArgumentList @(, $Bytes)
     $comprStream = New-Object -TypeName System.IO.Compression.$Type -ArgumentList @($input, [System.IO.Compression.CompressionMode]::Decompress)
     $output = New-Object -TypeName System.IO.MemoryStream
 
@@ -293,17 +305,18 @@ function ConvertFrom-Compressed(
 
     if ($Encoding -eq 'Bytes') {
         $data
-    } else {
+    }
+    else {
         ([System.Text.Encoding]::$Encoding).GetString($data).Split("`n")
     }
 }
 
 filter Escape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
-    $uri | %{ [uri]::EscapeDataString($_) }
+    $uri | % { [uri]::EscapeDataString($_) }
 }
 
 filter Unescape-Uri([Parameter(ValueFromPipeline = $true)]$uri) {
-    $uri | %{ [uri]::UnescapeDataString($_) }
+    $uri | % { [uri]::UnescapeDataString($_) }
 }
 
 function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {
@@ -324,10 +337,12 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {
             if ($_ -match '^about:/url\?q=([^&]+)&.*') {
                 # Google wraps regular links with /url?q=https://www.result.com/the-site/&sa=U&...
                 $Matches[1]
-            } elseif ($_ -match '^about:(/search\?q=.+)') {
+            }
+            elseif ($_ -match '^about:(/search\?q=.+)') {
                 # Links to similar searches start with /search?q=...
                 "https://www.google.com$($Matches[1])"
-            } else {
+            }
+            else {
                 $_
             }
         }
@@ -335,10 +350,10 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {
         # Search results are wrapped with <div class="ZINbbc xpd O9g5cc uUPGi">...</div>. Except the first and the last
         # one, which are both some tables we are not interested in.
         $htmlDocument.ParsedHtml.GetElementsByTagName("div") `
-        | ?{ $_.Attributes["class"].NodeValue -eq 'ZINbbc xpd O9g5cc uUPGi' } `
+        | ? { $_.Attributes["class"].NodeValue -eq 'ZINbbc xpd O9g5cc uUPGi' } `
         | select -Skip 1 `
         | select -Last 100 -Skip 1 `
-        | %{
+        | % {
             # Search result structure:
             #
             # <div class="kCrYT">
@@ -359,19 +374,19 @@ function google([Parameter(ValueFromRemainingArguments = $true)]$searchTerms) {
             #     </div>
             #   </div>
             # </div>
-            $containers = $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'kCrYT' }
+            $containers = $_.GetElementsByTagName("div") | ? { $_.Attributes["class"].NodeValue -eq 'kCrYT' }
             $link = $containers `
-                | select -First 1 `
-                | %{ $_.GetElementsByTagName("a") }
-            $title = $link.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe vvjwJb AP7Wnd' }
+            | select -First 1 `
+            | % { $_.GetElementsByTagName("a") }
+            $title = $link.GetElementsByTagName("div") | ? { $_.Attributes["class"].NodeValue -eq 'BNeawe vvjwJb AP7Wnd' }
             $snippet = $containers `
-                | select -Last 1 `
-                | %{ $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } } `
-                | %{ $_.GetElementsByTagName("div") | ?{ $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } }
+            | select -Last 1 `
+            | % { $_.GetElementsByTagName("div") | ? { $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } } `
+            | % { $_.GetElementsByTagName("div") | ? { $_.Attributes["class"].NodeValue -eq 'BNeawe s3v9rd AP7Wnd' } }
 
             @{
-                Title = $title.InnerText
-                Link = $link.Href | Parse-GoogleLink | Unescape-Uri
+                Title   = $title.InnerText
+                Link    = $link.Href | Parse-GoogleLink | Unescape-Uri
                 Snippet = $snippet.InnerText
             }
         }
